@@ -1,6 +1,6 @@
 #include <io4edge_client.h>
 
-void main(void)
+int main(void)
 {
-    io4edge_client_t *client = io4edge_client_new();
+    io4edge_client_new(0L, "192.168.24.213", 9999);
 }
