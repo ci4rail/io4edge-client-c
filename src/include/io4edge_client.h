@@ -3,6 +3,7 @@
 #define IO4E_FAIL -1
 #define IO4E_ERR_TIMEOUT 1
 #define IO4E_ERR_NO_MEM 2
+#define IO4E_ERR_PROTOBUF 3
 
 typedef int io4e_err_t;
 

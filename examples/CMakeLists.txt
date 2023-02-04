@@ -7,6 +7,7 @@ foreach(examples_src ${EXAMPLES_SOURCES})
     string(REPLACE ".c" "" examplename ${examples_src})
     set(exampleexe "io4e-${examplename}")
     add_executable(${exampleexe} ${PROJECT_SOURCE_DIR}/examples/${examples_src})
-    target_link_libraries(${exampleexe} io4e_static ${EXTRA_LIBS})
+
+    target_link_libraries(${exampleexe} io4e_static ${EXTRA_LIBS} Threads::Threads)
 
 endforeach()

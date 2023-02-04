@@ -13,6 +13,7 @@ typedef struct io4edge_functionblock_client_t io4edge_functionblock_client_t;
 #include <string.h>
 
 #include "logging.h"
+#include "api/io4edge/protobuf-c/functionblock/v1alpha1/io4edge_functionblock.pb-c.h"
 
 // Transport interface
 typedef struct transport_t transport_t;
@@ -29,3 +30,9 @@ struct io4edge_functionblock_client_t {
     int cmd_context;  // id of the last command sent
     int cmd_timeout;  // timeout for commands in seconds
 };
+
+// functionblock client
+io4e_err_t io4e_functionblock_upload_configuration(io4edge_functionblock_client_t *client,
+    uint8_t *marshaled_fs_config,
+    size_t marshaled_fs_config_len,
+    char *fs_proto_name);
