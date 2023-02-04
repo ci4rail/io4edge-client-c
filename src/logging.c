@@ -1,5 +1,6 @@
+#include "io4edge_internal.h"
 #include <stdio.h>
-#include "logging.h"
+#include <stdarg.h>
 
 void io4e_log_writev(io4e_log_level_t level, const char *tag, const char *format, va_list args)
 {
@@ -12,9 +13,4 @@ void io4e_log_write(io4e_log_level_t level, const char *tag, const char *format,
     va_start(list, format);
     io4e_log_writev(level, tag, format, list);
     va_end(list);
-}
-
-uint32_t io4e_log_timestamp(void)
-{
-    return 0;  // TODO
 }

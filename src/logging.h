@@ -1,3 +1,11 @@
+/*
+ * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2023 Ci4Rail GmbH
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Heavily inspired by esp-idf logging.h
+ */
+
 #pragma once
 #include <stdint.h>
 #include <stdarg.h>
@@ -31,7 +39,6 @@ uint32_t io4e_log_timestamp(void);
 #define LOG_COLOR_W LOG_COLOR(LOG_COLOR_BROWN)
 #define LOG_COLOR_I LOG_COLOR(LOG_COLOR_GREEN)
 #define LOG_COLOR_D
-#define LOG_COLOR_V
 #define LOG_FORMAT(letter, format) LOG_COLOR_##letter #letter " (%u) %s: " format LOG_RESET_COLOR "\n"
 
 #define IO4E_LOG_LEVEL(level, tag, format, ...)                                                                    \

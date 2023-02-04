@@ -26,4 +26,6 @@ io4e_err_t io4edge_transport_new(const char *host, int port, transport_t **handl
 
 struct io4edge_functionblock_client_t {
     transport_t *transport;
+    int cmd_context;  // id of the last command sent
+    int cmd_timeout;  // timeout for commands in seconds
 };

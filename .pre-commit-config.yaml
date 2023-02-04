@@ -31,3 +31,5 @@ repos:
       - id: clang-format
         exclude: .+\.pb-c\.[ch]
         args: ["--style=file", "-i"]
+      # - id: clang-tidy
+      # - id: include-what-you-use
