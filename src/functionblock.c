@@ -34,16 +34,51 @@ io4e_err_t io4edge_functionblock_client_delete(io4edge_functionblock_client_t **
     return IO4E_OK;
 }
 
+static io4e_err_t map_fb_error(Functionblock__Status status)
+{
+    switch (status) {
+    case FUNCTIONBLOCK__STATUS__OK:
+        return IO4E_OK;
+    case FUNCTIONBLOCK__STATUS__UNSPECIFIC_ERROR:
+        return IO4E_ERR_FB_UNSPECIFIC_ERROR;
+    case FUNCTIONBLOCK__STATUS__UNKNOWN_COMMAND:
+        return IO4E_ERR_FB_UNKNOWN_COMMAND;
+    case FUNCTIONBLOCK__STATUS__NOT_IMPLEMENTED:
+        return IO4E_ERR_FB_NOT_IMPLEMENTED;
+    case FUNCTIONBLOCK__STATUS__WRONG_CLIENT:
+        return IO4E_ERR_FB_WRONG_CLIENT;
+    case FUNCTIONBLOCK__STATUS__INVALID_PARAMETER:
+        return IO4E_ERR_FB_INVALID_PARAMETER;
+    case FUNCTIONBLOCK__STATUS__HW_FAULT:
+        return IO4E_ERR_FB_HW_FAULT;
+    case FUNCTIONBLOCK__STATUS__STREAM_ALREADY_STARTED:
+        return IO4E_ERR_FB_STREAM_ALREADY_STARTED;
+    case FUNCTIONBLOCK__STATUS__STREAM_ALREADY_STOPPED:
+        return IO4E_ERR_FB_STREAM_ALREADY_STOPPED;
+    case FUNCTIONBLOCK__STATUS__STREAM_START_FAILED:
+        return IO4E_ERR_FB_STREAM_START_FAILED;
+    case FUNCTIONBLOCK__STATUS__TEMPORARILY_UNAVAILABLE:
+        return IO4E_ERR_FB_TEMPORARILY_UNAVAILABLE;
+    default:
+        return IO4E_ERR_FB_UNKNOWN;
+    }
+}
+
+// caller must free the response if it is not NULL
 static io4e_err_t command(io4edge_functionblock_client_t *client,
     const Functionblock__Command *cmd,
     Functionblock__Response **res_p)
 {
     io4e_err_t err;
     size_t marshaled_cmd_len = functionblock__command__get_packed_size(cmd);
-    uint8_t marshaled_cmd_buffer[marshaled_cmd_len];
-    functionblock__command__pack(cmd, marshaled_cmd_buffer);
+    size_t header_size = client->transport->get_write_offset(client->transport);
+    uint8_t marshaled_cmd_buffer[header_size + marshaled_cmd_len];
+    functionblock__command__pack(cmd, &marshaled_cmd_buffer[header_size]);
 
-    if ((err = client->transport->write_msg(client->transport, marshaled_cmd_buffer, marshaled_cmd_len)) != IO4E_OK) {
+    if (res_p)
+        *res_p = NULL;
+    if ((err = client->transport->write_msg(
+             client->transport, marshaled_cmd_buffer, marshaled_cmd_len + header_size)) != IO4E_OK) {
         IO4E_LOGE(TAG, "command write failed: %d", err);
         return err;
     }
@@ -60,20 +95,33 @@ static io4e_err_t command(io4edge_functionblock_client_t *client,
         IO4E_LOGE(TAG, "command unpack failed");
         return IO4E_ERR_PROTOBUF;
     }
+    // check status
+    if (res->status != FUNCTIONBLOCK__STATUS__OK) {
+        IO4E_LOGE(TAG,
+            "command failed: %s: %s",
+            functionblock__status__descriptor.values[res->status].name,
+            res->error->error);
+        functionblock__response__free_unpacked(res, NULL);
+
+        return map_fb_error(res->status);
+    }
+
     if (res_p)
         *res_p = res;
+    else
+        functionblock__response__free_unpacked(res, NULL);
+
     return IO4E_OK;
 }
 
-io4e_err_t io4e_functionblock_upload_configuration(io4edge_functionblock_client_t *client,
-    uint8_t *marshaled_fs_config,
-    size_t marshaled_fs_config_len,
-    char *fs_proto_name)
+// #define SET_ANY
+
+io4e_err_t io4e_functionblock_upload_configuration(io4edge_functionblock_client_t *client, io4e_protomsg_t *fs_config)
 {
     Google__Protobuf__Any pb_any = GOOGLE__PROTOBUF__ANY__INIT;
-    pb_any.type_url = fs_proto_name;
-    pb_any.value.len = marshaled_fs_config_len;
-    pb_any.value.data = marshaled_fs_config;
+    pb_any.type_url = (char *)fs_config->proto_name;
+    pb_any.value.len = fs_config->marshaled_msg_len;
+    pb_any.value.data = fs_config->marshaled_msg;
 
     Functionblock__Configuration pb_config = FUNCTIONBLOCK__CONFIGURATION__INIT;
     pb_config.action_case = FUNCTIONBLOCK__CONFIGURATION__ACTION_FUNCTION_SPECIFIC_CONFIGURATION_SET;

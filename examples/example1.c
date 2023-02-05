@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <io4edge_client.h>
+#include <binaryiotypea.h>
 
 int main(void)
 {
@@ -9,4 +9,14 @@ int main(void)
         printf("Failed to create client: %d\n", err);
         return 1;
     }
+
+    BinaryIoTypeA__ConfigurationSet config = BINARY_IO_TYPE_A__CONFIGURATION_SET__INIT;
+    config.outputwatchdogmask = 0x1;
+    config.outputwatchdogtimeout = 1000;
+
+    if ((err = io4edge_binaryiotypea_upload_configuration(client, &config)) != IO4E_OK) {
+        printf("Failed to upload configuration: %d\n", err);
+        return 1;
+    }
+    return 0;
 }
