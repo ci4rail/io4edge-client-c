@@ -24,24 +24,26 @@ int main(void)
     // printf("after upload\n");
     // malloc_stats();
 
-    BinaryIoTypeA__ConfigurationGetResponse dl_config;
+    BinaryIoTypeA__ConfigurationGetResponse *dl_config;
     if ((err = io4edge_binaryiotypea_download_configuration(client, &dl_config)) != IO4E_OK) {
         printf("Failed to upload configuration: %d\n", err);
         return 1;
     }
-    printf("Downloaded configuration: %d %d\n", dl_config.outputwatchdogmask, dl_config.outputwatchdogtimeout);
+    printf("Downloaded configuration: %d %d\n", dl_config->outputwatchdogmask, dl_config->outputwatchdogtimeout);
+    binary_io_type_a__configuration_get_response__free_unpacked(dl_config, NULL);
     // printf("after first download\n");
     // malloc_stats();
     if ((err = io4edge_binaryiotypea_download_configuration(client, &dl_config)) != IO4E_OK) {
         printf("Failed to upload configuration: %d\n", err);
         return 1;
     }
+    binary_io_type_a__configuration_get_response__free_unpacked(dl_config, NULL);
     // printf("after second download\n");
     // malloc_stats();
 
     io4edge_functionblock_client_delete(&client);
-    printf("after delete\n");
-    // malloc_stats();
+    // printf("after delete\n");
+    //  malloc_stats();
 
     return 0;
 }

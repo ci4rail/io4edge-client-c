@@ -39,18 +39,24 @@ typedef struct {
 } io4e_protomsg_t;
 
 typedef void *(*io4e_unpack_t)(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
-typedef void (*io4e_free_unpacked_t)(void *msg, ProtobufCAllocator *allocator);
+// typedef void (*io4e_free_unpacked_t)(void *msg, ProtobufCAllocator *allocator);
 
 io4e_err_t io4e_functionblock_upload_configuration(io4edge_functionblock_client_t *client, io4e_protomsg_t *fs_config);
 io4e_err_t io4e_functionblock_download_configuration(io4edge_functionblock_client_t *client,
-    io4e_protomsg_t *fs_msg,
+    io4e_protomsg_t *fs_req,
     io4e_unpack_t unpack,
-    io4e_free_unpacked_t free_unpacked,
     void **fs_res_p);
 
-#define IO4E_ALLOC_ON_STACK_AND_PACK_PROTOMSG(UNPACKEDMSG, PACKEDMSG, PREFIX, PROTONAME)     \
+// Pack the UNPACKEDMSG into a buffer on the stack and put the pack results in PACKEDMSG.
+#define IO4E_PACK_PROTOMSG(UNPACKEDMSG, PACKEDMSG, PREFIX, PROTONAME)                        \
     size_t UNPACKEDMSG##_packed_len = PREFIX##__##PROTONAME##__get_packed_size(UNPACKEDMSG); \
     uint8_t UNPACKEDMSG##_buffer[UNPACKEDMSG##_packed_len];                                  \
     PREFIX##__##PROTONAME##__pack(UNPACKEDMSG, UNPACKEDMSG##_buffer);                        \
     io4e_protomsg_t PACKEDMSG = {                                                            \
         UNPACKEDMSG##_buffer, UNPACKEDMSG##_packed_len, PREFIX##__##PROTONAME##__descriptor.name}
+
+// Make an empty request message for the given PROTONAME.
+#define IO4E_MAKE_EMPTY_REQUEST(REQ, PREFIX_CAMELCASE, PREFIX_UPPERCASE, PROTONAME_CAMELCASE, PROTONAME_UPPERCASE) \
+    PREFIX_CAMELCASE##__##PROTONAME_CAMELCASE _##REQ = PREFIX_UPPERCASE##__##PROTONAME_UPPERCASE##__INIT;          \
+    PREFIX_CAMELCASE##__##PROTONAME_CAMELCASE *REQ;                                                                \
+    REQ = &_##REQ
