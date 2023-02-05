@@ -19,7 +19,7 @@ typedef struct io4edge_functionblock_client_t io4edge_functionblock_client_t;
 typedef struct transport_t transport_t;
 struct transport_t {
     io4e_err_t (*write_msg)(transport_t *self, uint8_t *buf, uint32_t len);
-    io4e_err_t (*read_msg)(transport_t *self, uint8_t *buf, uint32_t buf_size, uint32_t *len_p, int timeout_seconds);
+    io4e_err_t (*read_msg)(transport_t *handle, uint8_t **buf_p, uint32_t *len_p, int timeout_seconds);
     uint32_t (*get_write_offset)(transport_t *self);
     void (*destroy)(transport_t **self_p);
 };
@@ -27,8 +27,13 @@ io4e_err_t io4edge_transport_new(const char *host, int port, transport_t **handl
 
 struct io4edge_functionblock_client_t {
     transport_t *transport;
-    int cmd_context;  // id of the last command sent
-    int cmd_timeout;  // timeout for commands in seconds
+    int cmd_context;                        // id of the last command sent
+    int cmd_timeout;                        // timeout for commands in seconds
+    pthread_t read_thread_id;               // thread id to handle responses
+    bool read_thread_stop;                  // flag to stop the read thread
+    Functionblock__Response *cmd_response;  // response of the last command
+    pthread_mutex_t cmd_mutex;              // mutex to protect cmd_response
+    pthread_cond_t cmd_cond;                // condition variable to wait for cmd_response
 };
 
 // functionblock client

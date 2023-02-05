@@ -22,7 +22,7 @@ static io4e_err_t read_complete(int sock, uint8_t *buf, uint32_t len)
         ret = read(sock, buf, len);
 
         if (ret == 0) {
-            return ECANCELED;
+            return IO4E_ERR_CONNECTION_CLOSED;
         }
         if (ret < 0) {
             return errno;
@@ -33,18 +33,31 @@ static io4e_err_t read_complete(int sock, uint8_t *buf, uint32_t len)
     return IO4E_OK;
 }
 
-static io4e_err_t read_msg(transport_t *handle, uint8_t *buf, uint32_t buf_size, uint32_t *len_p, int timeout_seconds)
+static io4e_err_t read_msg(transport_t *handle, uint8_t **buf_p, uint32_t *len_p, int timeout_seconds)
 {
     uint8_t hdr[FSTREAM_HEADER_SIZE];
     io4e_err_t ret;
     uint32_t len;
     handle_t *h = (handle_t *)handle;
+    uint8_t *payload = NULL;
 
-    // TODO: timeout
+    *buf_p = NULL;
+
+    // use select to check if there is data to read
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(h->socket, &readfds);
+    struct timeval timeout;
+    timeout.tv_sec = timeout_seconds;
+    timeout.tv_usec = 0;
+    ret = select(h->socket + 1, &readfds, NULL, NULL, &timeout);
+    if (ret == 0) {
+        return IO4E_ERR_TIMEOUT;
+    }
 
     ret = read_complete(h->socket, hdr, FSTREAM_HEADER_SIZE);
-    if (ret == ECANCELED) {
-        return ECANCELED;
+    if (ret == IO4E_ERR_CONNECTION_CLOSED) {
+        return IO4E_ERR_CONNECTION_CLOSED;
     }
     if ((ret == EAGAIN) || (ret == EWOULDBLOCK)) {
         return IO4E_ERR_TIMEOUT;
@@ -64,22 +77,26 @@ static io4e_err_t read_msg(transport_t *handle, uint8_t *buf, uint32_t buf_size,
     len |= ((uint32_t)hdr[sizeof(magic_bytes) + 2]) << 16;
     len |= ((uint32_t)hdr[sizeof(magic_bytes) + 3]) << 24;
 
-    if (len > buf_size) {
-        IO4E_LOGE(TAG, "read_msg msg too big: %d", len);
-        return E2BIG;
-    }
-
     if (len > 0) {
-        ret = read_complete(h->socket, buf, len);
-        if (ret == ECANCELED) {
-            return ECANCELED;
+        payload = malloc(len);
+        if (payload == NULL) {
+            IO4E_LOGE(TAG, "read_msg failed to allocate payload");
+            return IO4E_ERR_NO_MEM;
+        }
+
+        ret = read_complete(h->socket, payload, len);
+        if (ret == IO4E_ERR_CONNECTION_CLOSED) {
+            free(payload);
+            return IO4E_ERR_CONNECTION_CLOSED;
         }
         if (ret != IO4E_OK) {
             IO4E_LOGE(TAG, "read_msg failed to read payload: %d", ret);
+            free(payload);
             return ret;
         }
     }
     *len_p = len;
+    *buf_p = payload;
     return IO4E_OK;
 }
 

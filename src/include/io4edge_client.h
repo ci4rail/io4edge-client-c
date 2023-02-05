@@ -5,6 +5,7 @@
 #define IO4E_ERR_TIMEOUT 1
 #define IO4E_ERR_NO_MEM 2
 #define IO4E_ERR_PROTOBUF 3
+#define IO4E_ERR_CONNECTION_CLOSED 4
 #define IO4E_ERR_FB_UNSPECIFIC_ERROR 10
 #define IO4E_ERR_FB_UNKNOWN_COMMAND 11
 #define IO4E_ERR_FB_NOT_IMPLEMENTED 12
@@ -23,5 +24,8 @@ typedef int io4e_err_t;
 typedef void io4edge_functionblock_client_t;
 #endif
 
-io4e_err_t io4edge_functionblock_client_new(io4edge_functionblock_client_t **handle_p, const char *host, int port);
+io4e_err_t io4edge_functionblock_client_new(io4edge_functionblock_client_t **handle_p,
+    const char *host,
+    int port,
+    int cmd_timeout_seconds);
 io4e_err_t io4edge_functionblock_client_delete(io4edge_functionblock_client_t **handle_p);

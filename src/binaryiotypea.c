@@ -1,5 +1,3 @@
-#include "binaryIoTypeA/protobuf-c/binaryIoTypeA/v1alpha1/binaryIoTypeA.pb-c.h"
-#include "io4edge_client.h"
 #include "io4edge_internal.h"
 #include "binaryiotypea.h"
 
@@ -30,6 +28,7 @@ io4e_err_t io4edge_binaryiotypea_download_configuration(io4edge_functionblock_cl
     return IO4E_OK;
 }
 
+// caller must free the response in *description_p
 io4e_err_t io4edge_binaryiotypea_describe(io4edge_functionblock_client_t *client,
     BinaryIoTypeA__ConfigurationDescribeResponse **description_p)
 {
@@ -91,12 +90,13 @@ io4e_err_t io4edge_binaryiotypea_input(io4edge_functionblock_client_t *client, u
     }
     if (response->type_case != BINARY_IO_TYPE_A__FUNCTION_CONTROL_GET_RESPONSE__TYPE_SINGLE) {
         IO4E_LOGE(TAG, "Unexpected response type %d", response->type_case);
-        binary_io_type_a__function_control_get_response__free_unpacked(response, NULL);
-        return IO4E_ERR_PROTOBUF;
+        err = IO4E_ERR_PROTOBUF;
+        goto EXIT;
     }
 
     *state_p = response->single->state;
+EXIT:
     binary_io_type_a__function_control_get_response__free_unpacked(response, NULL);
 
-    return IO4E_OK;
+    return err;
 }

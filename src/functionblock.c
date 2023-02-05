@@ -1,9 +1,15 @@
 #include "io4edge_internal.h"
 #include "logging.h"
+#include "pthread.h"
 
 const char *TAG = "functionblock";
 
-io4e_err_t io4edge_functionblock_client_new(io4edge_functionblock_client_t **handle_p, const char *host, int port)
+static void *read_thread(void *arg);
+
+io4e_err_t io4edge_functionblock_client_new(io4edge_functionblock_client_t **handle_p,
+    const char *host,
+    int port,
+    int cmd_timeout_seconds)
 {
     io4e_err_t err;
     // allocate memory for the functionblock client
@@ -14,7 +20,15 @@ io4e_err_t io4edge_functionblock_client_new(io4edge_functionblock_client_t **han
 
     if ((err = io4edge_transport_new(host, port, &h->transport)) != IO4E_OK)
         goto ERREXIT;
+    h->cmd_timeout = cmd_timeout_seconds;
+    h->cmd_mutex = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
+    h->cmd_cond = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
 
+    if (pthread_create(&h->read_thread_id, NULL, read_thread, h) != 0) {
+        IO4E_LOGE(TAG, "Could not create read thread");
+        err = IO4E_FAIL;
+        goto ERREXIT;
+    }
     *handle_p = h;
 ERREXIT:
     if (err != IO4E_OK) {
@@ -83,18 +97,23 @@ static io4e_err_t command(io4edge_functionblock_client_t *client,
         return err;
     }
     uint32_t res_len;
-    uint8_t res_buffer[1024];  // TODO: allocate in read_msg
+    uint8_t *res_buffer;
 
-    if ((err = client->transport->read_msg(
-             client->transport, res_buffer, sizeof(res_buffer), &res_len, client->cmd_timeout)) != IO4E_OK) {
+    if ((err = client->transport->read_msg(client->transport, &res_buffer, &res_len, client->cmd_timeout)) != IO4E_OK) {
         IO4E_LOGE(TAG, "command read failed: %d", err);
         return err;
+    }
+    if (res_len == 0) {
+        IO4E_LOGE(TAG, "command read failed: empty response");
+        return IO4E_ERR_PROTOBUF;
     }
     Functionblock__Response *res = functionblock__response__unpack(NULL, res_len, res_buffer);
     if (res == NULL) {
         IO4E_LOGE(TAG, "command unpack failed");
         return IO4E_ERR_PROTOBUF;
     }
+    free(res_buffer);
+
     // check status
     if (res->status != FUNCTIONBLOCK__STATUS__OK) {
         IO4E_LOGE(TAG,
@@ -339,4 +358,55 @@ io4e_err_t io4e_functionblock_function_control_get(io4edge_functionblock_client_
 EXIT_PROTO:
     functionblock__response__free_unpacked(pb_res, NULL);
     return IO4E_ERR_PROTOBUF;
+}
+
+static void *read_thread(void *arg)
+{
+    io4edge_functionblock_client_t *client = (io4edge_functionblock_client_t *)arg;
+    io4e_err_t err;
+
+    while (!client->read_thread_stop) {
+        uint32_t res_len;
+        uint8_t *res_buffer;
+        if ((err = client->transport->read_msg(client->transport, &res_buffer, &res_len, 1)) != IO4E_OK) {
+            if (err == IO4E_ERR_TIMEOUT)
+                continue;
+            IO4E_LOGE(TAG, "command read failed: %d", err);
+            goto EXIT_THREAD;
+        }
+        if (res_len == 0) {
+            IO4E_LOGE(TAG, "command read failed: empty response");
+            goto EXIT_THREAD;
+        }
+        Functionblock__Response *res = functionblock__response__unpack(NULL, res_len, res_buffer);
+        if (res == NULL) {
+            IO4E_LOGE(TAG, "command unpack failed");
+            free(res_buffer);
+            goto EXIT_THREAD;
+        }
+        free(res_buffer);
+
+        int rc = pthread_mutex_lock(&client->cmd_mutex);
+        if (rc != 0) {
+            IO4E_LOGE(TAG, "pthread_mutex_lock failed: %d", rc);
+            functionblock__response__free_unpacked(res, NULL);
+            goto EXIT_THREAD;
+        }
+        client->cmd_response = res;
+        rc = pthread_cond_signal(&client->cmd_cond);
+        if (rc != 0) {
+            IO4E_LOGE(TAG, "pthread_cond_signal failed: %d", rc);
+            functionblock__response__free_unpacked(res, NULL);
+            pthread_mutex_unlock(&client->cmd_mutex);
+            goto EXIT_THREAD;
+        }
+        rc = pthread_mutex_unlock(&client->cmd_mutex);
+        if (rc != 0) {
+            IO4E_LOGE(TAG, "pthread_mutex_unlock failed: %d", rc);
+            goto EXIT_THREAD;
+        }
+    }
+EXIT_THREAD:
+    IO4E_LOGI(TAG, "read thread exit");
+    return NULL;
 }
