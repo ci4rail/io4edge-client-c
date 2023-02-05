@@ -279,16 +279,17 @@ io4e_err_t io4e_functionblock_function_control_set(io4edge_functionblock_client_
             pb_res, FUNCTIONBLOCK__FUNCTION_CONTROL_RESPONSE__ACTION_FUNCTION_SPECIFIC_FUNCTION_CONTROL_SET))
         goto EXIT_PROTO;
 
-    // unpack
-    void *fs_res = unpack(NULL,
-        pb_res->functioncontrol->functionspecificfunctioncontrolset->value.len,
-        pb_res->functioncontrol->functionspecificfunctioncontrolset->value.data);
-    if (fs_res == NULL) {
-        IO4E_LOGE(TAG, "unpack failed");
-        goto EXIT_PROTO;
+    if (fs_res_p) {
+        // unpack
+        void *fs_res = unpack(NULL,
+            pb_res->functioncontrol->functionspecificfunctioncontrolset->value.len,
+            pb_res->functioncontrol->functionspecificfunctioncontrolset->value.data);
+        if (fs_res == NULL) {
+            IO4E_LOGE(TAG, "unpack failed");
+            goto EXIT_PROTO;
+        }
+        *fs_res_p = fs_res;
     }
-    *fs_res_p = fs_res;
-
     // free command response
     functionblock__response__free_unpacked(pb_res, NULL);
     return IO4E_OK;

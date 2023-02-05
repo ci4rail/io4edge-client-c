@@ -46,6 +46,18 @@ io4e_err_t io4e_functionblock_download_configuration(io4edge_functionblock_clien
     io4e_protomsg_t *fs_req,
     io4e_unpack_t unpack,
     void **fs_res_p);
+io4e_err_t io4e_functionblock_describe(io4edge_functionblock_client_t *client,
+    io4e_protomsg_t *fs_req,
+    io4e_unpack_t unpack,
+    void **fs_res_p);
+io4e_err_t io4e_functionblock_function_control_set(io4edge_functionblock_client_t *client,
+    io4e_protomsg_t *fs_req,
+    io4e_unpack_t unpack,
+    void **fs_res_p);
+io4e_err_t io4e_functionblock_function_control_get(io4edge_functionblock_client_t *client,
+    io4e_protomsg_t *fs_req,
+    io4e_unpack_t unpack,
+    void **fs_res_p);
 
 // Pack the UNPACKEDMSG into a buffer on the stack and put the pack results in PACKEDMSG.
 #define IO4E_PACK_PROTOMSG(UNPACKEDMSG, PACKEDMSG, PREFIX, PROTONAME)                        \
@@ -53,6 +65,14 @@ io4e_err_t io4e_functionblock_download_configuration(io4edge_functionblock_clien
     uint8_t UNPACKEDMSG##_buffer[UNPACKEDMSG##_packed_len];                                  \
     PREFIX##__##PROTONAME##__pack(UNPACKEDMSG, UNPACKEDMSG##_buffer);                        \
     io4e_protomsg_t PACKEDMSG = {                                                            \
+        UNPACKEDMSG##_buffer, UNPACKEDMSG##_packed_len, PREFIX##__##PROTONAME##__descriptor.name}
+
+// Pack the UNPACKEDMSG pointer into a buffer on the stack and put the pack results in PACKEDMSG.
+#define IO4E_PACK_PROTOMSG_P(UNPACKEDMSG, PACKEDMSG, PREFIX, PROTONAME)                       \
+    size_t UNPACKEDMSG##_packed_len = PREFIX##__##PROTONAME##__get_packed_size(&UNPACKEDMSG); \
+    uint8_t UNPACKEDMSG##_buffer[UNPACKEDMSG##_packed_len];                                   \
+    PREFIX##__##PROTONAME##__pack(&UNPACKEDMSG, UNPACKEDMSG##_buffer);                        \
+    io4e_protomsg_t PACKEDMSG = {                                                             \
         UNPACKEDMSG##_buffer, UNPACKEDMSG##_packed_len, PREFIX##__##PROTONAME##__descriptor.name}
 
 // Make an empty request message for the given PROTONAME.

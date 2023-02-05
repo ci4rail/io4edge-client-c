@@ -1,4 +1,5 @@
 #pragma once
+#include <stdbool.h>
 #define IO4E_OK 0
 #define IO4E_FAIL -1
 #define IO4E_ERR_TIMEOUT 1
