@@ -38,10 +38,19 @@ typedef struct {
     const char *proto_name;
 } io4e_protomsg_t;
 
-io4e_err_t io4e_functionblock_upload_configuration(io4edge_functionblock_client_t *client, io4e_protomsg_t *fs_config);
+typedef void *(*io4e_unpack_t)(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+typedef void (*io4e_free_unpacked_t)(void *msg, ProtobufCAllocator *allocator);
 
-#define IO4E_ALLOC_ON_STACK_AND_PACK_PROTOMSG(m, PREFIX, PROTONAME)   \
-    size_t _packed_len = PREFIX##__##PROTONAME##__get_packed_size(m); \
-    uint8_t _buffer[_packed_len];                                     \
-    PREFIX##__##PROTONAME##__pack(m, _buffer);                        \
-    io4e_protomsg_t packed_msg = {_buffer, _packed_len, PREFIX##__configuration_set__descriptor.name}
+io4e_err_t io4e_functionblock_upload_configuration(io4edge_functionblock_client_t *client, io4e_protomsg_t *fs_config);
+io4e_err_t io4e_functionblock_download_configuration(io4edge_functionblock_client_t *client,
+    io4e_protomsg_t *fs_msg,
+    io4e_unpack_t unpack,
+    io4e_free_unpacked_t free_unpacked,
+    void **fs_res_p);
+
+#define IO4E_ALLOC_ON_STACK_AND_PACK_PROTOMSG(UNPACKEDMSG, PACKEDMSG, PREFIX, PROTONAME)     \
+    size_t UNPACKEDMSG##_packed_len = PREFIX##__##PROTONAME##__get_packed_size(UNPACKEDMSG); \
+    uint8_t UNPACKEDMSG##_buffer[UNPACKEDMSG##_packed_len];                                  \
+    PREFIX##__##PROTONAME##__pack(UNPACKEDMSG, UNPACKEDMSG##_buffer);                        \
+    io4e_protomsg_t PACKEDMSG = {                                                            \
+        UNPACKEDMSG##_buffer, UNPACKEDMSG##_packed_len, PREFIX##__##PROTONAME##__descriptor.name}

@@ -114,14 +114,15 @@ static io4e_err_t command(io4edge_functionblock_client_t *client,
     return IO4E_OK;
 }
 
-// #define SET_ANY
+#define MAKE_ANYPB(PBANY, MARSHALED_FS_MSG)                    \
+    Google__Protobuf__Any PBANY = GOOGLE__PROTOBUF__ANY__INIT; \
+    PBANY.type_url = (char *)MARSHALED_FS_MSG->proto_name;     \
+    PBANY.value.len = MARSHALED_FS_MSG->marshaled_msg_len;     \
+    PBANY.value.data = MARSHALED_FS_MSG->marshaled_msg;
 
-io4e_err_t io4e_functionblock_upload_configuration(io4edge_functionblock_client_t *client, io4e_protomsg_t *fs_config)
+io4e_err_t io4e_functionblock_upload_configuration(io4edge_functionblock_client_t *client, io4e_protomsg_t *fs_msg)
 {
-    Google__Protobuf__Any pb_any = GOOGLE__PROTOBUF__ANY__INIT;
-    pb_any.type_url = (char *)fs_config->proto_name;
-    pb_any.value.len = fs_config->marshaled_msg_len;
-    pb_any.value.data = fs_config->marshaled_msg;
+    MAKE_ANYPB(pb_any, fs_msg);
 
     Functionblock__Configuration pb_config = FUNCTIONBLOCK__CONFIGURATION__INIT;
     pb_config.action_case = FUNCTIONBLOCK__CONFIGURATION__ACTION_FUNCTION_SPECIFIC_CONFIGURATION_SET;
@@ -132,4 +133,55 @@ io4e_err_t io4e_functionblock_upload_configuration(io4edge_functionblock_client_
     pb_cmd.configuration = &pb_config;
 
     return command(client, &pb_cmd, NULL);
+}
+
+io4e_err_t io4e_functionblock_download_configuration(io4edge_functionblock_client_t *client,
+    io4e_protomsg_t *fs_req,
+    io4e_unpack_t unpack,
+    io4e_free_unpacked_t free_unpacked,
+    size_t unpacked_fs_res_len,
+    void *fs_res)
+{
+    io4e_err_t err;
+
+    MAKE_ANYPB(pb_any, fs_req);
+
+    Functionblock__Configuration pb_config = FUNCTIONBLOCK__CONFIGURATION__INIT;
+    pb_config.action_case = FUNCTIONBLOCK__CONFIGURATION__ACTION_FUNCTION_SPECIFIC_CONFIGURATION_GET;
+    pb_config.functionspecificconfigurationset = &pb_any;
+
+    Functionblock__Command pb_cmd = FUNCTIONBLOCK__COMMAND__INIT;
+    pb_cmd.type_case = FUNCTIONBLOCK__COMMAND__TYPE_CONFIGURATION;
+    pb_cmd.configuration = &pb_config;
+
+    Functionblock__Response *pb_res;
+    if ((err = command(client, &pb_cmd, &pb_res)) != IO4E_OK)
+        return err;
+
+    if (pb_res->type_case != FUNCTIONBLOCK__RESPONSE__TYPE_CONFIGURATION) {
+        IO4E_LOGE(TAG, "unexpected response type: %d", pb_res->type_case);
+        functionblock__response__free_unpacked(pb_res, NULL);
+        return IO4E_ERR_PROTOBUF;
+    }
+    if (pb_res->configuration->action_case !=
+        FUNCTIONBLOCK__CONFIGURATION__ACTION_FUNCTION_SPECIFIC_CONFIGURATION_GET) {
+        IO4E_LOGE(TAG, "unexpected response action: %d", pb_res->configuration->action_case);
+        functionblock__response__free_unpacked(pb_res, NULL);
+        return IO4E_ERR_PROTOBUF;
+    }
+    // unpack
+    void *fs_res_alloced = unpack(NULL,
+        pb_res->configuration->functionspecificconfigurationget->value.len,
+        pb_res->configuration->functionspecificconfigurationget->value.data);
+    if (fs_res_alloced == NULL) {
+        IO4E_LOGE(TAG, "unpack failed");
+        functionblock__response__free_unpacked(pb_res, NULL);
+        return IO4E_ERR_PROTOBUF;
+    }
+    *fs_res_p = fs_res;
+    free_unpacked(fs_res, NULL);
+
+    // free response
+    functionblock__response__free_unpacked(pb_res, NULL);
+    return IO4E_OK;
 }
