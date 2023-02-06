@@ -43,7 +43,7 @@ static inline size_t advance_idx(streamq_t *q, size_t idx)
     return (idx + 1) % q->nentries;
 }
 
-// Push a message into the queue
+// Push a message into the queue. Blocks if the queue is full.
 // @param msg: message to push
 void io4e_streamq_push(streamq_t *q, void *msg)
 {
@@ -58,6 +58,7 @@ void io4e_streamq_push(streamq_t *q, void *msg)
 // Pop a message from the queue
 // @param msg_p: pointer to store the message
 // @param timeout: timeout in seconds
+// @return IO4E_OK on success, IO4E_ERR_TIMEOUT on timeout
 io4e_err_t io4e_streamq_pop(streamq_t *q, void **msg_p, int timeout)
 {
     struct timespec ts;
