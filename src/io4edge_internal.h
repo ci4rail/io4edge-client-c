@@ -11,7 +11,7 @@ typedef struct io4edge_functionblock_client_t io4edge_functionblock_client_t;
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-
+#include <semaphore.h>
 #include "logging.h"
 #include "api/io4edge/protobuf-c/functionblock/v1alpha1/io4edge_functionblock.pb-c.h"
 
@@ -27,13 +27,12 @@ io4e_err_t io4edge_transport_new(const char *host, int port, transport_t **handl
 
 struct io4edge_functionblock_client_t {
     transport_t *transport;
-    int cmd_context;                        // id of the last command sent
+    char cmd_context[2];                    // id of the last command sent as a single char string
     int cmd_timeout;                        // timeout for commands in seconds
     pthread_t read_thread_id;               // thread id to handle responses
     bool read_thread_stop;                  // flag to stop the read thread
     Functionblock__Response *cmd_response;  // response of the last command
-    pthread_mutex_t cmd_mutex;              // mutex to protect cmd_response
-    pthread_cond_t cmd_cond;                // condition variable to wait for cmd_response
+    sem_t cmd_sem;                          // semaphore to signal cmd_response
 };
 
 // functionblock client
