@@ -12,6 +12,7 @@ typedef struct io4edge_functionblock_client_t io4edge_functionblock_client_t;
 #include <unistd.h>
 #include <string.h>
 #include <semaphore.h>
+#include <pthread.h>
 #include "logging.h"
 #include "api/io4edge/protobuf-c/functionblock/v1alpha1/io4edge_functionblock.pb-c.h"
 
@@ -30,12 +31,13 @@ struct io4edge_functionblock_client_t {
     char cmd_context[2];                    // id of the last command sent as a single char string
     int cmd_timeout;                        // timeout for commands in seconds
     pthread_t read_thread_id;               // thread id to handle responses
+    pthread_mutex_t cmd_mutex;              // mutex to protect command from reentrance
     bool read_thread_stop;                  // flag to stop the read thread
     Functionblock__Response *cmd_response;  // response of the last command
     sem_t cmd_sem;                          // semaphore to signal cmd_response
 };
 
-// functionblock client
+// Protobuf marshaling
 typedef struct {
     uint8_t *marshaled_msg;
     size_t marshaled_msg_len;
@@ -43,7 +45,6 @@ typedef struct {
 } io4e_protomsg_t;
 
 typedef void *(*io4e_unpack_t)(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
-// typedef void (*io4e_free_unpacked_t)(void *msg, ProtobufCAllocator *allocator);
 
 io4e_err_t io4e_functionblock_upload_configuration(io4edge_functionblock_client_t *client, io4e_protomsg_t *fs_config);
 io4e_err_t io4e_functionblock_download_configuration(io4edge_functionblock_client_t *client,
@@ -84,3 +85,19 @@ io4e_err_t io4e_functionblock_function_control_get(io4edge_functionblock_client_
     PREFIX_CAMELCASE##__##PROTONAME_CAMELCASE _##REQ = PREFIX_UPPERCASE##__##PROTONAME_UPPERCASE##__INIT;          \
     PREFIX_CAMELCASE##__##PROTONAME_CAMELCASE *REQ;                                                                \
     REQ = &_##REQ
+
+// stream queue
+typedef struct {
+    void **msg;             // message array
+    size_t nentries;        // capacity of the array
+    int write_idx;          // index of the next message to be written
+    int read_idx;           // index of the next message to be read
+    sem_t write_sem;        // semaphore that counts the number of free messages in the queue
+    sem_t read_sem;         // semaphore that counts the number of messages in the queue
+    pthread_mutex_t mutex;  // mutex to protect the queue
+} streamq_t;
+
+io4e_err_t io4e_streamq_new(size_t nentries, streamq_t **q_p);
+void io4e_streamq_free(streamq_t *q);
+void io4e_streamq_push(streamq_t *q, void *msg);
+io4e_err_t io4e_streamq_pop(streamq_t *q, void **msg_p, int timeout);

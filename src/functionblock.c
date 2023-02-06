@@ -1,7 +1,4 @@
-#include <bits/time.h>
 #include "io4edge_internal.h"
-#include "logging.h"
-#include "pthread.h"
 
 const char *TAG = "functionblock";
 
@@ -25,6 +22,8 @@ io4e_err_t io4edge_functionblock_client_new(io4edge_functionblock_client_t **han
     h->cmd_context[0] = 'A';
     h->cmd_context[1] = '\0';
     sem_init(&h->cmd_sem, 0, 0);
+    h->cmd_mutex = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
+    h->read_thread_stop = false;
 
     if (pthread_create(&h->read_thread_id, NULL, read_thread, h) != 0) {
         IO4E_LOGE(TAG, "Could not create read thread");
@@ -93,7 +92,12 @@ static io4e_err_t command(io4edge_functionblock_client_t *h,
     io4e_err_t err;
     Functionblock__Context context = FUNCTIONBLOCK__CONTEXT__INIT;
     cmd->context = &context;
-    // TODO: use mutex to protect this function from reentrance
+
+    if (pthread_mutex_lock(&h->cmd_mutex) != 0) {
+        IO4E_LOGE(TAG, "Could not lock cmd_mutex");
+        return IO4E_FAIL;
+    }
+
     h->cmd_context[0]++;
     cmd->context->value = h->cmd_context;
     size_t marshaled_cmd_len = functionblock__command__get_packed_size(cmd);
@@ -106,7 +110,7 @@ static io4e_err_t command(io4edge_functionblock_client_t *h,
     if ((err = h->transport->write_msg(h->transport, marshaled_cmd_buffer, marshaled_cmd_len + header_size)) !=
         IO4E_OK) {
         IO4E_LOGE(TAG, "command write failed: %d", err);
-        return err;
+        goto EXIT;
     }
     // wait using sem_timedwait for the response
     struct timespec ts;
@@ -114,7 +118,8 @@ static io4e_err_t command(io4edge_functionblock_client_t *h,
     ts.tv_sec += h->cmd_timeout;
     if (sem_timedwait(&h->cmd_sem, &ts) == -1) {
         IO4E_LOGE(TAG, "command timed out");
-        return IO4E_ERR_TIMEOUT;
+        err = IO4E_ERR_TIMEOUT;
+        goto EXIT;
     }
 
     Functionblock__Response *res = h->cmd_response;
@@ -122,13 +127,14 @@ static io4e_err_t command(io4edge_functionblock_client_t *h,
 
     if (res == NULL) {
         IO4E_LOGE(TAG, "command response is NULL");
-        return IO4E_FAIL;
+        err = IO4E_FAIL;
+        goto EXIT;
     }
     // check context
     if (strcmp(res->context->value, h->cmd_context) != 0) {
         IO4E_LOGE(TAG, "command response context mismatch");
         err = IO4E_FAIL;
-        goto ERR_EXIT;
+        goto EXIT_FREE_RES;
     }
     // advance context
     h->cmd_context[0]++;
@@ -142,19 +148,20 @@ static io4e_err_t command(io4edge_functionblock_client_t *h,
             functionblock__status__descriptor.values[res->status].name,
             res->error->error);
         err = map_fb_error(res->status);
-        goto ERR_EXIT;
+        goto EXIT_FREE_RES;
     }
 
     if (res_p)
         *res_p = res;
     else {
         err = IO4E_OK;
-        goto ERR_EXIT;
+        goto EXIT_FREE_RES;
     }
-
-    return IO4E_OK;
-ERR_EXIT:
+    goto EXIT;
+EXIT_FREE_RES:
     functionblock__response__free_unpacked(res, NULL);
+EXIT:
+    pthread_mutex_unlock(&h->cmd_mutex);
     return err;
 }
 
@@ -426,6 +433,6 @@ static void *read_thread(void *arg)
         }
     }
 EXIT_THREAD:
-    IO4E_LOGI(TAG, "read thread exit");
+    IO4E_LOGD(TAG, "read thread exit");
     return NULL;
 }
