@@ -68,7 +68,6 @@ io4e_err_t io4e_streamq_pop(streamq_t *q, void **msg_p, int timeout)
         return IO4E_ERR_TIMEOUT;
     }
 
-    sem_wait(&q->read_sem);
     pthread_mutex_lock(&q->mutex);
     *msg_p = q->msg[q->read_idx];
     q->read_idx = advance_idx(q, q->read_idx);
