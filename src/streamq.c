@@ -4,24 +4,24 @@
 static const char *TAG = "streamq";
 
 // Create a new stream queue
-// @param nentries: capacity of the queue
+// @param capacity: capacity of the queue
 // @param q_p: pointer to the new queue
-io4e_err_t io4e_streamq_new(size_t nentries, streamq_t **q_p)
+io4e_err_t io4e_streamq_new(size_t capacity, streamq_t **q_p)
 {
     streamq_t *q = calloc(1, sizeof(streamq_t));
     if (q == NULL) {
         return IO4E_ERR_NO_MEM;
     }
-    q->msg = calloc(nentries, sizeof(void *));
+    q->msg = calloc(capacity, sizeof(void *));
     if (q->msg == NULL) {
         free(q);
         return IO4E_ERR_NO_MEM;
     }
-    q->nentries = nentries;
+    q->capacity = capacity;
     q->write_idx = 0;
     q->read_idx = 0;
     q->mutex = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
-    sem_init(&q->write_sem, 0, nentries);
+    sem_init(&q->write_sem, 0, capacity);
     sem_init(&q->read_sem, 0, 0);
     *q_p = q;
     return IO4E_OK;
@@ -40,19 +40,27 @@ void io4e_streamq_free(streamq_t *q)
 // advance index
 static inline size_t advance_idx(streamq_t *q, size_t idx)
 {
-    return (idx + 1) % q->nentries;
+    return (idx + 1) % q->capacity;
 }
 
 // Push a message into the queue. Blocks if the queue is full.
 // @param msg: message to push
-void io4e_streamq_push(streamq_t *q, void *msg)
+io4e_err_t io4e_streamq_push(streamq_t *q, void *msg, int timeout)
 {
-    sem_wait(&q->write_sem);
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    ts.tv_sec += timeout;
+    if (sem_timedwait(&q->write_sem, &ts) == -1) {
+        IO4E_LOGD(TAG, "push timed out");
+        return IO4E_ERR_TIMEOUT;
+    }
     pthread_mutex_lock(&q->mutex);
     q->msg[q->write_idx] = msg;
     q->write_idx = advance_idx(q, q->write_idx);
+    q->nentries++;
     pthread_mutex_unlock(&q->mutex);
     sem_post(&q->read_sem);
+    return IO4E_OK;
 }
 
 // Pop a message from the queue
@@ -65,13 +73,24 @@ io4e_err_t io4e_streamq_pop(streamq_t *q, void **msg_p, int timeout)
     clock_gettime(CLOCK_REALTIME, &ts);
     ts.tv_sec += timeout;
     if (sem_timedwait(&q->read_sem, &ts) == -1) {
-        IO4E_LOGE(TAG, "pop timed out");
+        IO4E_LOGD(TAG, "pop timed out");
         return IO4E_ERR_TIMEOUT;
     }
 
     pthread_mutex_lock(&q->mutex);
     *msg_p = q->msg[q->read_idx];
     q->read_idx = advance_idx(q, q->read_idx);
+    q->nentries--;
     pthread_mutex_unlock(&q->mutex);
     sem_post(&q->write_sem);
+}
+
+// Get the number of messages in the queue
+size_t io4e_streamq_entries(streamq_t *q)
+{
+    size_t size;
+    pthread_mutex_lock(&q->mutex);
+    size = q->nentries;
+    pthread_mutex_unlock(&q->mutex);
+    return size;
 }

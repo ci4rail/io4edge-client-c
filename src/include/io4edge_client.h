@@ -1,4 +1,8 @@
 #pragma once
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #define IO4E_OK 0
 #define IO4E_FAIL -1
@@ -29,3 +33,7 @@ io4e_err_t io4edge_functionblock_client_new(io4edge_functionblock_client_t **han
     int port,
     int cmd_timeout_seconds);
 io4e_err_t io4edge_functionblock_client_delete(io4edge_functionblock_client_t **handle_p);
+
+#ifdef __cplusplus
+}
+#endif

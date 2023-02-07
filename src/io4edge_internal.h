@@ -89,9 +89,10 @@ io4e_err_t io4e_functionblock_function_control_get(io4edge_functionblock_client_
 // stream queue
 typedef struct {
     void **msg;             // message array
-    size_t nentries;        // capacity of the array
+    size_t capacity;        // capacity of the array
     int write_idx;          // index of the next message to be written
     int read_idx;           // index of the next message to be read
+    int nentries;           // current number of entries in the queue
     sem_t write_sem;        // semaphore that counts the number of free messages in the queue
     sem_t read_sem;         // semaphore that counts the number of messages in the queue
     pthread_mutex_t mutex;  // mutex to protect the queue
@@ -99,5 +100,6 @@ typedef struct {
 
 io4e_err_t io4e_streamq_new(size_t nentries, streamq_t **q_p);
 void io4e_streamq_free(streamq_t *q);
-void io4e_streamq_push(streamq_t *q, void *msg);
+io4e_err_t io4e_streamq_push(streamq_t *q, void *msg, int timeout);
 io4e_err_t io4e_streamq_pop(streamq_t *q, void **msg_p, int timeout);
+size_t io4e_streamq_entries(streamq_t *q);
