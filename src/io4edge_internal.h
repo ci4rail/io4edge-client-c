@@ -80,6 +80,9 @@ io4e_err_t io4e_functionblock_function_control_get(io4edge_functionblock_client_
     io4e_protomsg_t *fs_req,
     io4e_unpack_t unpack,
     void **fs_res_p);
+io4e_err_t io4e_functionblock_start_stream(io4edge_functionblock_client_t *h,
+    io4e_protomsg_t *fs_config,
+    Functionblock__StreamControlStart *fb_config);
 
 // Pack the UNPACKEDMSG into a buffer on the stack and put the pack results in PACKEDMSG.
 #define IO4E_PACK_PROTOMSG(UNPACKEDMSG, PACKEDMSG, PREFIX, PROTONAME)                        \

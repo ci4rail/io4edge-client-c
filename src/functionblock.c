@@ -1,10 +1,11 @@
+#include "io4edge_functionblock.pb-c.h"
 #include "io4edge_internal.h"
 
 const char *TAG = "functionblock";
 
 static void *read_thread(void *arg);
 
-io4e_err_t io4edge_functionblock_client_new(io4edge_functionblock_client_t **handle_p,
+io4e_err_t io4edge_functionblock_client_new_from_host_port(io4edge_functionblock_client_t **handle_p,
     const char *host,
     int port,
     int cmd_timeout_seconds)
@@ -399,6 +400,35 @@ io4e_err_t io4e_functionblock_function_control_get(io4edge_functionblock_client_
 EXIT_PROTO:
     functionblock__response__free_unpacked(pb_res, NULL);
     return IO4E_ERR_PROTOBUF;
+}
+
+io4e_err_t io4e_functionblock_start_stream(io4edge_functionblock_client_t *h,
+    io4e_protomsg_t *fs_config,
+    Functionblock__StreamControlStart *fb_config)
+{
+    MAKE_ANYPB(pb_any, fs_config);
+    Functionblock__StreamControl pb_sc = FUNCTIONBLOCK__STREAM_CONTROL__INIT;
+    pb_sc.action_case = FUNCTIONBLOCK__STREAM_CONTROL__ACTION_START;
+    pb_sc.start = fb_config;
+    fb_config->functionspecificstreamcontrolstart = &pb_any;
+
+    Functionblock__Command pb_cmd = FUNCTIONBLOCK__COMMAND__INIT;
+    pb_cmd.type_case = FUNCTIONBLOCK__COMMAND__TYPE_STREAM_CONTROL;
+    pb_cmd.streamcontrol = &pb_sc;
+
+    return command(h, &pb_cmd, NULL);
+}
+
+io4e_err_t io4edge_functionblock_stop_stream(io4edge_functionblock_client_t *h)
+{
+    Functionblock__StreamControl pb_sc = FUNCTIONBLOCK__STREAM_CONTROL__INIT;
+    pb_sc.action_case = FUNCTIONBLOCK__STREAM_CONTROL__ACTION_STOP;
+
+    Functionblock__Command pb_cmd = FUNCTIONBLOCK__COMMAND__INIT;
+    pb_cmd.type_case = FUNCTIONBLOCK__COMMAND__TYPE_STREAM_CONTROL;
+    pb_cmd.streamcontrol = &pb_sc;
+
+    return command(h, &pb_cmd, NULL);
 }
 
 io4e_err_t io4edge_functionblock_read_stream(io4edge_functionblock_client_t *h, void **msg_p, long timeout)

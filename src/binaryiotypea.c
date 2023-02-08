@@ -71,6 +71,15 @@ io4e_err_t io4edge_binaryiotypea_set_all_outputs(io4edge_functionblock_client_t 
     return io4e_functionblock_function_control_set(client, &packed_req, NULL, NULL);
 }
 
+io4e_err_t io4edge_binaryiotypea_exit_error_state(io4edge_functionblock_client_t *client)
+{
+    BinaryIoTypeA__FunctionControlSet set = BINARY_IO_TYPE_A__FUNCTION_CONTROL_SET__INIT;
+    set.type_case = BINARY_IO_TYPE_A__FUNCTION_CONTROL_SET__TYPE_EXIT_ERROR;
+    IO4E_PACK_PROTOMSG_P(set, packed_req, binary_io_type_a, function_control_set);
+
+    return io4e_functionblock_function_control_set(client, &packed_req, NULL, NULL);
+}
+
 io4e_err_t io4edge_binaryiotypea_input(io4edge_functionblock_client_t *client, uint32_t channel, bool *state_p)
 {
     io4e_err_t err;
@@ -99,4 +108,45 @@ EXIT:
     binary_io_type_a__function_control_get_response__free_unpacked(response, NULL);
 
     return err;
+}
+
+io4e_err_t io4edge_binaryiotypea_all_inputs(io4edge_functionblock_client_t *client, uint32_t mask, uint32_t *states_p)
+{
+    io4e_err_t err;
+    BinaryIoTypeA__FunctionControlGet get = BINARY_IO_TYPE_A__FUNCTION_CONTROL_GET__INIT;
+    get.type_case = BINARY_IO_TYPE_A__FUNCTION_CONTROL_GET__TYPE_ALL;
+    BinaryIoTypeA__GetAll get_all = BINARY_IO_TYPE_A__GET_ALL__INIT;
+    get.all = &get_all;
+    get_all.mask = mask;
+    IO4E_PACK_PROTOMSG_P(get, packed_req, binary_io_type_a, function_control_get);
+
+    BinaryIoTypeA__FunctionControlGetResponse *response;
+    if ((err = io4e_functionblock_function_control_get(client,
+             &packed_req,
+             (io4e_unpack_t)binary_io_type_a__function_control_get_response__unpack,
+             (void **)&response)) != IO4E_OK) {
+        return err;
+    }
+    if (response->type_case != BINARY_IO_TYPE_A__FUNCTION_CONTROL_GET_RESPONSE__TYPE_ALL) {
+        IO4E_LOGE(TAG, "Unexpected response type %d", response->type_case);
+        err = IO4E_ERR_PROTOBUF;
+        goto EXIT;
+    }
+
+    *states_p = response->all->inputs;
+EXIT:
+    binary_io_type_a__function_control_get_response__free_unpacked(response, NULL);
+
+    return err;
+}
+
+io4e_err_t io4edge_binaryiotypea_start_stream(io4edge_functionblock_client_t *client,
+    uint32_t channelfiltermask,
+    Functionblock__StreamControlStart *fb_config)
+{
+    BinaryIoTypeA__StreamControlStart start = BINARY_IO_TYPE_A__STREAM_CONTROL_START__INIT;
+    start.channelfiltermask = channelfiltermask;
+    IO4E_PACK_PROTOMSG_P(start, packed_req, binary_io_type_a, stream_control_start);
+
+    return io4e_functionblock_start_stream(client, &packed_req, fb_config);
 }
