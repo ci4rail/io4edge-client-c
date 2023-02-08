@@ -27,9 +27,11 @@ io4e_err_t io4e_streamq_new(size_t capacity, streamq_t **q_p)
     return IO4E_OK;
 }
 
-// Free a stream queue
-void io4e_streamq_free(streamq_t *q)
+// Delete stream queue
+void io4e_streamq_delete(streamq_t **q_p)
 {
+    streamq_t *q = *q_p;
+    *q_p = NULL;
     if (q == NULL)
         return;
     if (q->msg != NULL)
@@ -45,7 +47,7 @@ static inline size_t advance_idx(streamq_t *q, size_t idx)
 
 // Push a message into the queue. Blocks if the queue is full.
 // @param msg: message to push
-io4e_err_t io4e_streamq_push(streamq_t *q, void *msg, int timeout)
+io4e_err_t io4e_streamq_push(streamq_t *q, void *msg, long timeout)
 {
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
@@ -67,7 +69,7 @@ io4e_err_t io4e_streamq_push(streamq_t *q, void *msg, int timeout)
 // @param msg_p: pointer to store the message
 // @param timeout: timeout in seconds
 // @return IO4E_OK on success, IO4E_ERR_TIMEOUT on timeout
-io4e_err_t io4e_streamq_pop(streamq_t *q, void **msg_p, int timeout)
+io4e_err_t io4e_streamq_pop(streamq_t *q, void **msg_p, long timeout)
 {
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);

@@ -33,6 +33,7 @@ io4e_err_t io4edge_functionblock_client_new(io4edge_functionblock_client_t **han
     int port,
     int cmd_timeout_seconds);
 io4e_err_t io4edge_functionblock_client_delete(io4edge_functionblock_client_t **handle_p);
+io4e_err_t io4edge_functionblock_read_stream(io4edge_functionblock_client_t *h, void **msg_p, long timeout);
 
 #ifdef __cplusplus
 }

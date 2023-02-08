@@ -16,6 +16,9 @@ typedef struct io4edge_functionblock_client_t io4edge_functionblock_client_t;
 #include "logging.h"
 #include "api/io4edge/protobuf-c/functionblock/v1alpha1/io4edge_functionblock.pb-c.h"
 
+#define CONFIG_STREAMQ_CAPACITY 100
+#define IO4E_FOREVER 10000000000  // more than 200 years
+
 // Transport interface
 typedef struct transport_t transport_t;
 struct transport_t {
@@ -26,6 +29,19 @@ struct transport_t {
 };
 io4e_err_t io4edge_transport_new(const char *host, int port, transport_t **handle_p);
 
+// stream queue
+typedef struct {
+    void **msg;             // message array
+    size_t capacity;        // capacity of the array
+    int write_idx;          // index of the next message to be written
+    int read_idx;           // index of the next message to be read
+    int nentries;           // current number of entries in the queue
+    sem_t write_sem;        // semaphore that counts the number of free messages in the queue
+    sem_t read_sem;         // semaphore that counts the number of messages in the queue
+    pthread_mutex_t mutex;  // mutex to protect the queue
+} streamq_t;
+
+// functionblock client
 struct io4edge_functionblock_client_t {
     transport_t *transport;
     char cmd_context[2];                    // id of the last command sent as a single char string
@@ -35,6 +51,7 @@ struct io4edge_functionblock_client_t {
     bool read_thread_stop;                  // flag to stop the read thread
     Functionblock__Response *cmd_response;  // response of the last command
     sem_t cmd_sem;                          // semaphore to signal cmd_response
+    streamq_t *streamq;                     // queue for incoming stream messages
 };
 
 // Protobuf marshaling
@@ -86,20 +103,8 @@ io4e_err_t io4e_functionblock_function_control_get(io4edge_functionblock_client_
     PREFIX_CAMELCASE##__##PROTONAME_CAMELCASE *REQ;                                                                \
     REQ = &_##REQ
 
-// stream queue
-typedef struct {
-    void **msg;             // message array
-    size_t capacity;        // capacity of the array
-    int write_idx;          // index of the next message to be written
-    int read_idx;           // index of the next message to be read
-    int nentries;           // current number of entries in the queue
-    sem_t write_sem;        // semaphore that counts the number of free messages in the queue
-    sem_t read_sem;         // semaphore that counts the number of messages in the queue
-    pthread_mutex_t mutex;  // mutex to protect the queue
-} streamq_t;
-
 io4e_err_t io4e_streamq_new(size_t nentries, streamq_t **q_p);
-void io4e_streamq_free(streamq_t *q);
-io4e_err_t io4e_streamq_push(streamq_t *q, void *msg, int timeout);
-io4e_err_t io4e_streamq_pop(streamq_t *q, void **msg_p, int timeout);
+void io4e_streamq_delete(streamq_t **q_p);
+io4e_err_t io4e_streamq_push(streamq_t *q, void *msg, long timeout);
+io4e_err_t io4e_streamq_pop(streamq_t *q, void **msg_p, long timeout);
 size_t io4e_streamq_entries(streamq_t *q);

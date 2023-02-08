@@ -13,6 +13,7 @@ TEST(StreamQ, InitialEmpty)
     EXPECT_EQ(err, IO4E_OK);
     ASSERT_TRUE(q != nullptr);
     EXPECT_EQ(io4e_streamq_entries(q), 0);
+    io4e_streamq_delete(&q);
 }
 
 TEST(StreamQ, PushPop)
@@ -48,6 +49,7 @@ TEST(StreamQ, PushPop)
     }
     err = io4e_streamq_pop(q, &p, 0);
     EXPECT_EQ(err, IO4E_ERR_TIMEOUT);
+    io4e_streamq_delete(&q);
 }
 
 static void *slow_consumer_thread(void *arg)
@@ -79,6 +81,7 @@ TEST(StreamQ, MultiThreadSlowConsumer)
         EXPECT_EQ(err, IO4E_OK);
     }
     pthread_join(thread, NULL);
+    io4e_streamq_delete(&q);
 }
 
 static void *fast_consumer_thread(void *arg)
@@ -110,4 +113,5 @@ TEST(StreamQ, MultiThreadFastConsumer)
         EXPECT_EQ(err, IO4E_OK);
     }
     pthread_join(thread, NULL);
+    io4e_streamq_delete(&q);
 }

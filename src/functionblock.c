@@ -25,6 +25,10 @@ io4e_err_t io4edge_functionblock_client_new(io4edge_functionblock_client_t **han
     h->cmd_mutex = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
     h->read_thread_stop = false;
 
+    // create streamq
+    if ((err = io4e_streamq_new(CONFIG_STREAMQ_CAPACITY, &h->streamq)) != IO4E_OK)
+        goto ERREXIT;
+
     if (pthread_create(&h->read_thread_id, NULL, read_thread, h) != 0) {
         IO4E_LOGE(TAG, "Could not create read thread");
         err = IO4E_FAIL;
@@ -33,6 +37,10 @@ io4e_err_t io4edge_functionblock_client_new(io4edge_functionblock_client_t **han
     *handle_p = h;
 ERREXIT:
     if (err != IO4E_OK) {
+        if (h->transport != NULL)
+            h->transport->destroy(&h->transport);
+        if (h->streamq != NULL)
+            io4e_streamq_delete(&h->streamq);
         free(h);
     }
     return err;
@@ -46,6 +54,7 @@ io4e_err_t io4edge_functionblock_client_delete(io4edge_functionblock_client_t **
         // stop the read thread
         h->read_thread_stop = true;
         pthread_join(h->read_thread_id, NULL);
+        io4e_streamq_delete(&h->streamq);
 
         h->transport->destroy(&h->transport);
         free(h);
@@ -392,6 +401,11 @@ EXIT_PROTO:
     return IO4E_ERR_PROTOBUF;
 }
 
+io4e_err_t io4edge_functionblock_read_stream(io4edge_functionblock_client_t *h, void **msg_p, long timeout)
+{
+    return io4e_streamq_pop(h->streamq, msg_p, timeout);
+}
+
 static void *read_thread(void *arg)
 {
     io4edge_functionblock_client_t *h = (io4edge_functionblock_client_t *)arg;
@@ -404,32 +418,41 @@ static void *read_thread(void *arg)
             if (err == IO4E_ERR_TIMEOUT)
                 continue;
             IO4E_LOGE(TAG, "command read failed: %d", err);
-            goto EXIT_THREAD;
+            continue;
         }
         if (res_len == 0) {
             IO4E_LOGE(TAG, "command read failed: empty response");
-            goto EXIT_THREAD;
+            continue;
         }
         Functionblock__Response *res = functionblock__response__unpack(NULL, res_len, res_buffer);
         if (res == NULL) {
             IO4E_LOGE(TAG, "command unpack failed");
             free(res_buffer);
-            goto EXIT_THREAD;
+            continue;
         }
         free(res_buffer);
 
-        // TODO: check for stream
+        if (res->type_case == FUNCTIONBLOCK__RESPONSE__TYPE_STREAM) {
+            // got stream data
+            if ((err = io4e_streamq_push(h->streamq, res, IO4E_FOREVER)) != IO4E_OK) {
+                IO4E_LOGE(TAG, "streamq push failed: %d", err);
+                functionblock__response__free_unpacked(res, NULL);
+                continue;
+            }
+        } else {
+            // got command response
 
-        if (h->cmd_response != NULL) {
-            IO4E_LOGW(TAG, "command response already set");
-            functionblock__response__free_unpacked(h->cmd_response, NULL);
-        }
+            if (h->cmd_response != NULL) {
+                IO4E_LOGW(TAG, "command response already set");
+                functionblock__response__free_unpacked(h->cmd_response, NULL);
+            }
 
-        h->cmd_response = res;
-        if ((sem_post(&h->cmd_sem) != 0)) {
-            free(res);
-            IO4E_LOGE(TAG, "sem_post failed");
-            goto EXIT_THREAD;
+            h->cmd_response = res;
+            if ((sem_post(&h->cmd_sem) != 0)) {
+                free(res);
+                IO4E_LOGE(TAG, "sem_post failed");
+                goto EXIT_THREAD;
+            }
         }
     }
 EXIT_THREAD:

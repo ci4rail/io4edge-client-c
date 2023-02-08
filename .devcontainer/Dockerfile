@@ -22,3 +22,5 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 # PROTOBUF-C
 RUN git clone https://github.com/protobuf-c/protobuf-c.git && \
     cd protobuf-c && ./autogen.sh && ./configure && make && make install
+
+RUN pip install pre-commit
