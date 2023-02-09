@@ -94,18 +94,16 @@ int main(void)
     // read stream
     for (int i = 0; i < 10; i++) {
         Functionblock__StreamData *stream_data;
-        if ((err = io4edge_functionblock_read_stream(client, (void **)&stream_data, 2000)) != IO4E_OK) {
+        BinaryIoTypeA__StreamData *fs_stream_data;
+        if ((err = io4edge_functionblock_read_stream(client,
+                 (io4edge_unpack_t)binary_io_type_a__stream_data__unpack,
+                 &stream_data,
+                 (void **)&fs_stream_data,
+                 2000)) != IO4E_OK) {
             printf("Failed to read stream: %d\n", err);
             return 1;
         }
         printf("Received stream data ts=%ld, seq=%d\n", stream_data->deliverytimestampus, stream_data->sequence);
-        BinaryIoTypeA__StreamData *fs_stream_data = binary_io_type_a__stream_data__unpack(NULL,
-            stream_data->functionspecificstreamdata->value.len,
-            stream_data->functionspecificstreamdata->value.data);
-        if (fs_stream_data == NULL) {
-            printf("Failed to unpack stream data\n");
-            return 1;
-        }
         for (int i = 0; i < fs_stream_data->n_samples; i++) {
             BinaryIoTypeA__Sample *sample = fs_stream_data->samples[i];
             printf(" Channel %d -> %d\n", sample->channel, sample->value);

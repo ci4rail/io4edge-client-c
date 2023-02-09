@@ -4,6 +4,12 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdint.h>
+#include <protobuf-c/protobuf-c.h>
+#include "io4edge/protobuf-c/functionblock/v1alpha1/io4edge_functionblock.pb-c.h"
+
 #define IO4E_OK 0
 #define IO4E_FAIL -1
 #define IO4E_ERR_TIMEOUT 1
@@ -28,13 +34,19 @@ typedef int io4e_err_t;
 typedef void io4edge_functionblock_client_t;
 #endif
 
+typedef void *(*io4edge_unpack_t)(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+
 io4e_err_t io4edge_functionblock_client_new_from_host_port(io4edge_functionblock_client_t **handle_p,
     const char *host,
     int port,
     int cmd_timeout_seconds);
 io4e_err_t io4edge_functionblock_client_delete(io4edge_functionblock_client_t **handle_p);
 io4e_err_t io4edge_functionblock_stop_stream(io4edge_functionblock_client_t *h);
-io4e_err_t io4edge_functionblock_read_stream(io4edge_functionblock_client_t *h, void **msg_p, long timeout);
+io4e_err_t io4edge_functionblock_read_stream(io4edge_functionblock_client_t *h,
+    io4edge_unpack_t unpack,
+    Functionblock__StreamData **sd_p,
+    void **fs_data_p,
+    long timeout);
 
 #ifdef __cplusplus
 }

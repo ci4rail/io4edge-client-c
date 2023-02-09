@@ -4,17 +4,13 @@
 typedef struct io4edge_functionblock_client_t io4edge_functionblock_client_t;
 
 #include <io4edge_client.h>
-#include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include <errno.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <semaphore.h>
 #include <pthread.h>
 #include "logging.h"
-#include "api/io4edge/protobuf-c/functionblock/v1alpha1/io4edge_functionblock.pb-c.h"
 
 #define CONFIG_STREAMQ_CAPACITY 100
 #define IO4E_FOREVER 10000000000  // more than 200 years
@@ -61,24 +57,24 @@ typedef struct {
     const char *proto_name;
 } io4e_protomsg_t;
 
-typedef void *(*io4e_unpack_t)(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
+typedef void *(*io4edge_unpack_t)(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
 
 io4e_err_t io4e_functionblock_upload_configuration(io4edge_functionblock_client_t *client, io4e_protomsg_t *fs_config);
 io4e_err_t io4e_functionblock_download_configuration(io4edge_functionblock_client_t *client,
     io4e_protomsg_t *fs_req,
-    io4e_unpack_t unpack,
+    io4edge_unpack_t unpack,
     void **fs_res_p);
 io4e_err_t io4e_functionblock_describe(io4edge_functionblock_client_t *client,
     io4e_protomsg_t *fs_req,
-    io4e_unpack_t unpack,
+    io4edge_unpack_t unpack,
     void **fs_res_p);
 io4e_err_t io4e_functionblock_function_control_set(io4edge_functionblock_client_t *client,
     io4e_protomsg_t *fs_req,
-    io4e_unpack_t unpack,
+    io4edge_unpack_t unpack,
     void **fs_res_p);
 io4e_err_t io4e_functionblock_function_control_get(io4edge_functionblock_client_t *client,
     io4e_protomsg_t *fs_req,
-    io4e_unpack_t unpack,
+    io4edge_unpack_t unpack,
     void **fs_res_p);
 io4e_err_t io4e_functionblock_start_stream(io4edge_functionblock_client_t *h,
     io4e_protomsg_t *fs_config,

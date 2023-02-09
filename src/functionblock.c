@@ -1,4 +1,4 @@
-#include "io4edge_functionblock.pb-c.h"
+
 #include "io4edge_internal.h"
 
 const char *TAG = "functionblock";
@@ -231,7 +231,7 @@ io4e_err_t io4e_functionblock_upload_configuration(io4edge_functionblock_client_
 
 io4e_err_t io4e_functionblock_download_configuration(io4edge_functionblock_client_t *h,
     io4e_protomsg_t *fs_req,
-    io4e_unpack_t unpack,
+    io4edge_unpack_t unpack,
     void **fs_res_p)
 {
     io4e_err_t err;
@@ -274,7 +274,7 @@ EXIT_PROTO:
 
 io4e_err_t io4e_functionblock_describe(io4edge_functionblock_client_t *h,
     io4e_protomsg_t *fs_req,
-    io4e_unpack_t unpack,
+    io4edge_unpack_t unpack,
     void **fs_res_p)
 {
     io4e_err_t err;
@@ -317,7 +317,7 @@ EXIT_PROTO:
 
 io4e_err_t io4e_functionblock_function_control_set(io4edge_functionblock_client_t *h,
     io4e_protomsg_t *fs_req,
-    io4e_unpack_t unpack,
+    io4edge_unpack_t unpack,
     void **fs_res_p)
 {
     io4e_err_t err;
@@ -361,7 +361,7 @@ EXIT_PROTO:
 
 io4e_err_t io4e_functionblock_function_control_get(io4edge_functionblock_client_t *h,
     io4e_protomsg_t *fs_req,
-    io4e_unpack_t unpack,
+    io4edge_unpack_t unpack,
     void **fs_res_p)
 {
     io4e_err_t err;
@@ -431,9 +431,34 @@ io4e_err_t io4edge_functionblock_stop_stream(io4edge_functionblock_client_t *h)
     return command(h, &pb_cmd, NULL);
 }
 
-io4e_err_t io4edge_functionblock_read_stream(io4edge_functionblock_client_t *h, void **msg_p, long timeout)
+io4e_err_t io4edge_functionblock_read_stream(io4edge_functionblock_client_t *h,
+    io4edge_unpack_t unpack,
+    Functionblock__StreamData **sd_p,
+    void **fs_data_p,
+    long timeout)
 {
-    return io4e_streamq_pop(h->streamq, msg_p, timeout);
+    io4e_err_t err;
+    Functionblock__StreamData *sd;
+    void *fs_data;
+
+    *sd_p = NULL;
+    *fs_data_p = NULL;
+
+    if ((err = io4e_streamq_pop(h->streamq, (void **)&sd, timeout)) != IO4E_OK) {
+        return err;
+    }
+    if (sd->functionspecificstreamdata == NULL) {
+        IO4E_LOGE(TAG, "functionspecificstreamdata is NULL");
+        return IO4E_ERR_PROTOBUF;
+    }
+    fs_data = unpack(NULL, sd->functionspecificstreamdata->value.len, sd->functionspecificstreamdata->value.data);
+    if (fs_data == NULL) {
+        IO4E_LOGE(TAG, "unpack failed");
+        return IO4E_ERR_PROTOBUF;
+    }
+    *sd_p = sd;
+    *fs_data_p = fs_data;
+    return IO4E_OK;
 }
 
 static void *read_thread(void *arg)
@@ -464,7 +489,12 @@ static void *read_thread(void *arg)
 
         if (res->type_case == FUNCTIONBLOCK__RESPONSE__TYPE_STREAM) {
             // got stream data
-            if ((err = io4e_streamq_push(h->streamq, res, IO4E_FOREVER)) != IO4E_OK) {
+            Functionblock__StreamData *sd = res->stream;
+            res->stream = NULL;  // prevent free
+            // free response (but not stream data)
+            functionblock__response__free_unpacked(res, NULL);
+
+            if ((err = io4e_streamq_push(h->streamq, sd, IO4E_FOREVER)) != IO4E_OK) {
                 IO4E_LOGE(TAG, "streamq push failed: %d", err);
                 functionblock__response__free_unpacked(res, NULL);
                 continue;

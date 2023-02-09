@@ -21,7 +21,7 @@ io4e_err_t io4edge_binaryiotypea_download_configuration(io4edge_functionblock_cl
 
     if ((err = io4e_functionblock_download_configuration(client,
              &packed_req,
-             (io4e_unpack_t)binary_io_type_a__configuration_get_response__unpack,
+             (io4edge_unpack_t)binary_io_type_a__configuration_get_response__unpack,
              (void **)configuration_p)) != IO4E_OK) {
         return err;
     }
@@ -38,7 +38,7 @@ io4e_err_t io4edge_binaryiotypea_describe(io4edge_functionblock_client_t *client
 
     if ((err = io4e_functionblock_describe(client,
              &packed_req,
-             (io4e_unpack_t)binary_io_type_a__configuration_describe_response__unpack,
+             (io4edge_unpack_t)binary_io_type_a__configuration_describe_response__unpack,
              (void **)description_p)) != IO4E_OK) {
         return err;
     }
@@ -93,7 +93,7 @@ io4e_err_t io4edge_binaryiotypea_input(io4edge_functionblock_client_t *client, u
     BinaryIoTypeA__FunctionControlGetResponse *response;
     if ((err = io4e_functionblock_function_control_get(client,
              &packed_req,
-             (io4e_unpack_t)binary_io_type_a__function_control_get_response__unpack,
+             (io4edge_unpack_t)binary_io_type_a__function_control_get_response__unpack,
              (void **)&response)) != IO4E_OK) {
         return err;
     }
@@ -123,7 +123,7 @@ io4e_err_t io4edge_binaryiotypea_all_inputs(io4edge_functionblock_client_t *clie
     BinaryIoTypeA__FunctionControlGetResponse *response;
     if ((err = io4e_functionblock_function_control_get(client,
              &packed_req,
-             (io4e_unpack_t)binary_io_type_a__function_control_get_response__unpack,
+             (io4edge_unpack_t)binary_io_type_a__function_control_get_response__unpack,
              (void **)&response)) != IO4E_OK) {
         return err;
     }
