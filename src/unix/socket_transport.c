@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: 2023 Ci4Rail GmbH
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <io4edge_internal.h>
 #include <sys/socket.h>
 #include <netdb.h>

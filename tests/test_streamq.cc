@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2023 Ci4Rail GmbH
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #include <unistd.h>
 #include <ctime>
 #include "gtest/gtest.h"

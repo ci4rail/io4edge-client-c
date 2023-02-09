@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2023 Ci4Rail GmbH
+# SPDX-License-Identifier: Apache-2.0
+
 file(GLOB SOURCES "*.c")
 file(GLOB_RECURSE API_SOURCES "api/*.c")
 file(GLOB PS_SOURCES "${IO4E_PLATFORM_INCLUDE}/*.c")

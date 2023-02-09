@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: 2023 Ci4Rail GmbH
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include "io4edge_client.h"
 #include "io4edge_api/binaryIoTypeA.pb-c.h"
 #include "io4edge_api/io4edge_functionblock.pb-c.h"

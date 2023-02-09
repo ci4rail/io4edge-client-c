@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2023 Ci4Rail GmbH
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #pragma once
 #define IO4EDGE_INTERNAL_H
 
