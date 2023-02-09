@@ -155,7 +155,7 @@ static io4e_err_t transport_connect(const char *host, int port, int *socket_p)
 
     hostent = gethostbyname(host);
     if (hostent == NULL) {
-        IO4E_LOGW(TAG, "gethostbyname failed");
+        IO4E_LOGE(TAG, "gethostbyname failed");
         return IO4E_FAIL;
     }
     struct in_addr **addr_list = (struct in_addr **)hostent->h_addr_list;
@@ -176,7 +176,7 @@ static io4e_err_t transport_connect(const char *host, int port, int *socket_p)
     IO4E_LOGD(TAG, "Socket created, connecting to port %d", port);
 
     if (connect(sock, (struct sockaddr *)&dest_addr, sizeof(struct sockaddr_in)) != 0) {
-        IO4E_LOGW(TAG, "Socket unable to connect: errno %d", errno);
+        IO4E_LOGE(TAG, "Socket unable to connect: errno %d", errno);
         close(sock);
         return IO4E_FAIL;
     }
@@ -193,11 +193,11 @@ static io4e_err_t transport_connect(const char *host, int port, int *socket_p)
 io4e_err_t io4edge_transport_new(const char *host, int port, transport_t **handle_p)
 {
     handle_t *h = calloc(1, sizeof(handle_t));
+    *handle_p = NULL;
     if (h == NULL) {
         IO4E_LOGE(TAG, "Could not allocate memory for io4edge_new_fstream handle");
         return IO4E_ERR_NO_MEM;
     }
-    *handle_p = (transport_t *)h;
     h->methods.read_msg = read_msg;
     h->methods.write_msg = write_msg;
     h->methods.get_write_offset = get_write_offset;
@@ -209,5 +209,6 @@ io4e_err_t io4edge_transport_new(const char *host, int port, transport_t **handl
         free(h);
         return ret;
     }
+    *handle_p = (transport_t *)h;
     return IO4E_OK;
 }
