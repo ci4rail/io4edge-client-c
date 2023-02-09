@@ -9,8 +9,8 @@
 # Build for debug
     
 ```bash
-mkdir debug
-cd debug
+mkdir build
+cd build
 cmake -DCMAKE_BUILD_TYPE=Debug  -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
 ln -s debug/compile_commands.json .
 ```

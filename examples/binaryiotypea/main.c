@@ -1,8 +1,7 @@
 #include <stdio.h>
-#include <io4edge_binaryiotypea.h>
-#include <unistd.h>
-#include <pthread.h>
 #include "io4edge_client.h"
+#include <io4edge_binaryiotypea.h>
+#include <pthread.h>
 
 static void *stim_thread(void *arg)
 {

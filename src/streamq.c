@@ -85,6 +85,7 @@ io4e_err_t io4e_streamq_pop(streamq_t *q, void **msg_p, long timeout)
     q->nentries--;
     pthread_mutex_unlock(&q->mutex);
     sem_post(&q->write_sem);
+    return IO4E_OK;
 }
 
 // Get the number of messages in the queue
