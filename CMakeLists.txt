@@ -5,6 +5,9 @@ project(io4edge-client-c)
 include(FindPackageHandleStandardArgs)
 
 set(IO4E_PLATFORM_INCLUDE "unix")
+include(GNUInstallDirs)
+set(IO4E_LIBDIR ${CMAKE_INSTALL_LIBDIR})
+set(IO4E_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR})
 
 FIND_PATH(
     IO4E_PROTOBUF_INCLUDE_DIR
@@ -42,4 +45,4 @@ enable_testing()
 
 add_subdirectory(src)
 add_subdirectory(examples)
-add_subdirectory(tests)
+add_subdirectory(tests EXCLUDE_FROM_ALL)

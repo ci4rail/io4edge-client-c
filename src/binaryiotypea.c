@@ -1,5 +1,5 @@
 #include "io4edge_internal.h"
-#include "binaryiotypea.h"
+#include "io4edge_binaryiotypea.h"
 
 static const char *TAG = "binaryiotypea";
 

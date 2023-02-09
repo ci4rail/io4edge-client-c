@@ -8,7 +8,7 @@ extern "C" {
 #include <unistd.h>
 #include <stdint.h>
 #include <protobuf-c/protobuf-c.h>
-#include "io4edge/protobuf-c/functionblock/v1alpha1/io4edge_functionblock.pb-c.h"
+#include "io4edge_api/io4edge_functionblock.pb-c.h"
 
 #define IO4E_OK 0
 #define IO4E_FAIL -1

@@ -1,3 +1,3 @@
-debug/
-release/
+build/
 .cache/
+src/include/io4edge_api/
