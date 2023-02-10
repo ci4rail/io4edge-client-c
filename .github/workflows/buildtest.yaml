@@ -32,8 +32,8 @@ jobs:
           cd /repo
           mkdir build && cd build
           cmake ..
-          cmake --build
-          cmake --install
+          cmake --build .
+          sudo cmake --install .
 
           EOF
 
