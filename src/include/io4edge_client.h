@@ -1,4 +1,6 @@
 /*
+ * User header file for the io4edge client library.
+ *
  * SPDX-FileCopyrightText: 2023 Ci4Rail GmbH
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -15,6 +17,7 @@ extern "C" {
 #include <protobuf-c/protobuf-c.h>
 #include "io4edge_api/io4edge_functionblock.pb-c.h"
 
+// Error codes returned by the io4edge client library
 #define IO4E_OK 0
 #define IO4E_FAIL -1
 #define IO4E_ERR_TIMEOUT 1
@@ -33,12 +36,14 @@ extern "C" {
 #define IO4E_ERR_FB_TEMPORARILY_UNAVAILABLE 19
 #define IO4E_ERR_FB_UNKNOWN 99
 
+// Type for return values
 typedef int io4e_err_t;
 
 #ifndef IO4EDGE_INTERNAL_H
 typedef void io4edge_functionblock_client_t;
 #endif
 
+// Function pointer to unpack a protobuf message
 typedef void *(*io4edge_unpack_t)(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
 
 io4e_err_t io4edge_functionblock_client_new_from_host_port(io4edge_functionblock_client_t **handle_p,
