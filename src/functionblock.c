@@ -29,7 +29,6 @@ io4e_err_t io4edge_functionblock_client_new_from_host_port(io4edge_functionblock
     h->cmd_context[1] = '\0';
     sem_init(&h->cmd_sem, 0, 0);
     h->cmd_mutex = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
-    h->read_thread_stop = false;
 
     // create streamq
     if ((err = io4e_streamq_new(CONFIG_STREAMQ_CAPACITY, &h->streamq)) != IO4E_OK)
@@ -58,7 +57,7 @@ io4e_err_t io4edge_functionblock_client_delete(io4edge_functionblock_client_t **
         io4edge_functionblock_client_t *h = *handle_p;
 
         // stop the read thread
-        h->read_thread_stop = true;
+        pthread_cancel(h->read_thread_id);
         pthread_join(h->read_thread_id, NULL);
         io4e_streamq_delete(&h->streamq);
 
@@ -471,7 +470,7 @@ static void *read_thread(void *arg)
     io4edge_functionblock_client_t *h = (io4edge_functionblock_client_t *)arg;
     io4e_err_t err;
 
-    while (!h->read_thread_stop) {
+    while (1) {
         uint32_t res_len;
         uint8_t *res_buffer;
         if ((err = h->transport->read_msg(h->transport, &res_buffer, &res_len, 1)) != IO4E_OK) {

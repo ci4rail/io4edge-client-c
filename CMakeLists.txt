@@ -38,8 +38,6 @@ ENDIF()
 
 find_package(Threads REQUIRED)
 
-list(APPEND EXTRA_LIBS io4e_static)
-
 enable_testing()
 
 

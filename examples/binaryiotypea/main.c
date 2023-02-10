@@ -1,8 +1,21 @@
+/*
+ * Demo application for the BinaryIoTypeA function block
+ *
+ * SPDX-FileCopyrightText: 2023 Ci4Rail GmbH
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <stdio.h>
 #include "io4edge_client.h"
 #include <io4edge_binaryiotypea.h>
 #include <pthread.h>
 
+// change this to your device's IP address
+#define DEVICE_IP "192.168.24.154"
+#define DEVICE_PORT 10002
+
+// toggle output 0 every 300ms
 static void *stim_thread(void *arg)
 {
     io4edge_functionblock_client_t *client = (io4edge_functionblock_client_t *)arg;
@@ -26,7 +39,7 @@ int main(void)
 {
     io4e_err_t err;
     io4edge_functionblock_client_t *client;
-    if ((err = io4edge_functionblock_client_new_from_host_port(&client, "192.168.24.154", 10002, 5)) != IO4E_OK) {
+    if ((err = io4edge_functionblock_client_new_from_host_port(&client, DEVICE_IP, DEVICE_PORT, 5)) != IO4E_OK) {
         printf("Failed to create client: %d\n", err);
         return 1;
     }
@@ -46,22 +59,26 @@ int main(void)
         return 1;
     }
     printf("Downloaded configuration: %d %d\n", dl_config->outputwatchdogmask, dl_config->outputwatchdogtimeout);
+    // free the downloaded configuration
     binary_io_type_a__configuration_get_response__free_unpacked(dl_config, NULL);
 
-    pthread_t stim_thread_id;
-    pthread_create(&stim_thread_id, NULL, stim_thread, client);
-
-#if 0
-    if ((err = io4edge_binaryiotypea_set_output(client, 0, true)) != IO4E_OK) {
+    // demonstrate how to set a single output. Activate second output
+    if ((err = io4edge_binaryiotypea_set_output(client, 1, true)) != IO4E_OK) {
         printf("Failed to set output: %d\n", err);
         return 1;
     }
 
-    if ((err = io4edge_binaryiotypea_set_all_outputs(client, 0x1, 0x1)) != IO4E_OK) {
+    // demonstrate how to set all outputs. Activate first and second output.
+    // Leave third and fourth output untouched
+    if ((err = io4edge_binaryiotypea_set_all_outputs(client, 0x3, 0x3)) != IO4E_OK) {
         printf("Failed to set all outputs: %d\n", err);
         return 1;
     }
-#endif
+
+    // start a thread to toggle output 0
+    pthread_t stim_thread_id;
+    pthread_create(&stim_thread_id, NULL, stim_thread, client);
+
     // start stream
     Functionblock__StreamControlStart stream_attr = FUNCTIONBLOCK__STREAM_CONTROL_START__INIT;
     stream_attr.bucketsamples = 10;
@@ -73,6 +90,7 @@ int main(void)
         return 1;
     }
 
+    // Demonstrate how to read current state of inputs
     for (int i = 0; i < 10; i++) {
         bool state;
         if ((err = io4edge_binaryiotypea_input(client, 0, &state)) != IO4E_OK) {

@@ -49,7 +49,6 @@ struct io4edge_functionblock_client_t {
     int cmd_timeout;                        // timeout for commands in seconds
     pthread_t read_thread_id;               // thread id to handle responses
     pthread_mutex_t cmd_mutex;              // mutex to protect command from reentrance
-    bool read_thread_stop;                  // flag to stop the read thread
     Functionblock__Response *cmd_response;  // response of the last command
     sem_t cmd_sem;                          // semaphore to signal cmd_response
     streamq_t *streamq;                     // queue for incoming stream messages
