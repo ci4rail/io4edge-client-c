@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2023 Ci4Rail GmbH
 # SPDX-License-Identifier: Apache-2.0
 
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.10)
 
 project(io4edge-client-c)
 
