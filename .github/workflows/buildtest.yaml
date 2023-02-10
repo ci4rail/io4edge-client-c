@@ -41,4 +41,4 @@ jobs:
           ls -l `pwd`
 
           chmod +x /tmp/cmd.sh
-          docker run --platform linux/amd64 -v`pwd`:/repo -v/tmp:/cmd ubuntu:latest ls /cmd/cmd.sh
+          docker run --platform linux/amd64 -v`pwd`:/repo -v/tmp:/cmd ubuntu:latest /cmd/cmd.sh
