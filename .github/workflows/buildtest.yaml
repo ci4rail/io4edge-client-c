@@ -10,8 +10,15 @@ jobs:
   main:
     strategy:
       matrix:
-        os: ["ubuntu:22.04", "ubuntu:20.04"]
-        platform: [linux/amd64, linux/arm/v7, linux/arm64]
+        include:
+          - os: "ubuntu:22.04"
+            platform: "linux/amd64"
+          - os: "ubuntu:22.04"
+            platform: "linux/arm64"
+          - os: "ubuntu:22.04"
+            platform: "linux/arm/v7"
+          - os: "ubuntu:20.04"
+            platform: "linux/amd64"
     runs-on: ubuntu-22.04
     steps:
       - name: Set up QEMU
@@ -22,8 +29,6 @@ jobs:
           fetch-depth: 0
           submodules: recursive
       - name: Build in Container
-        # known to fail unter ubuntu 20.04 and arm7
-        if: matrix.os != 'ubuntu:20.04' || matrix.platform != 'linux/arm/v7'
         run: |
           cat << EOF > /tmp/cmd.sh
           #!/bin/sh
