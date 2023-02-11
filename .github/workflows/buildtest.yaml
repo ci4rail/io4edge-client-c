@@ -23,7 +23,7 @@ jobs:
           submodules: recursive
       - name: Build in Container
         # known to fail unter ubuntu 20.04 and arm7
-        if: matrix.os != "ubuntu:20.04" || matrix.platform != "linux/arm/v7"
+        if: matrix.os != 'ubuntu:20.04' || matrix.platform != 'linux/arm/v7'
         run: |
           cat << EOF > /tmp/cmd.sh
           #!/bin/sh
