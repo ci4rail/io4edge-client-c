@@ -10,7 +10,7 @@ jobs:
   main:
     strategy:
       matrix:
-        os: ["ubuntu:22.04", "ubuntu:18.04"]
+        os: ["ubuntu:22.04", "ubuntu:20.04"]
         platform: [linux/amd64, linux/arm/v7, linux/arm64]
     runs-on: ubuntu-22.04
     steps:
