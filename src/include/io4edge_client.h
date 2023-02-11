@@ -46,6 +46,18 @@ typedef void io4edge_functionblock_client_t;
 // Function pointer to unpack a protobuf message
 typedef void *(*io4edge_unpack_t)(ProtobufCAllocator *allocator, size_t len, const uint8_t *data);
 
+/*
+ * @brief Create a new io4edge functionblock client.
+ *
+ * Connects to an io4edge function block server and creates a new client. The client handle must
+ * be passed to all other functions.
+ *
+ * @param handle_p[out] Pointer to the handle that is filled with the new client.
+ * @param host Hostname or IP address of the io4edge server.
+ * @param port Port of the io4edge server.
+ * @param cmd_timeout_seconds Sets the timeout for commands in seconds.
+ * @return IO4E_OK on success, IO4E_FAIL on failure.
+ */
 io4e_err_t io4edge_functionblock_client_new_from_host_port(io4edge_functionblock_client_t **handle_p,
     const char *host,
     int port,

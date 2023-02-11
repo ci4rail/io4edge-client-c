@@ -39,6 +39,11 @@ jobs:
           cmake --build .
           cmake --install .
 
+          # build example out of project
+          cp /repo/examples/binaryiotypea/main.c /tmp
+          cd /tmp
+          gcc -o example main.c -lpthread -lrt -lio4edge -lprotobuf-c
+
           EOF
 
           pwd
