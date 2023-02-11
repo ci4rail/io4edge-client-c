@@ -4,10 +4,10 @@ C/C++ client sdk for io4edge.
 [io4edge devices](https://docs.ci4rail.com/edge-solutions/io4edge/) are intelligent I/O devices invented by [Ci4Rail](https://www.ci4rail.com), connected to the host via network.
 
 This library provides support for the following function blocks within io4edge devices:
+* Analog In TypeA - IOU01, MIO01
 * Binary IO TypeA - IOU01, MIO01
 
 Currently not supported, but will follow:
-* Analog In TypeA - IOU01, MIO01
 * CAN Layer2 - IOU03, MIO03, IOU04, MIO04, IOU06
 * MVB Sniffer - IOU03, MIO03
 * Binary IO TypeC - IOU07
@@ -56,6 +56,8 @@ gcc -o example example.c -lpthread -lrt -lio4edge -lprotobuf-c
 
 ## Development
 
+When using vscode, open this repo in a [devcontainer](./devcontainer). This will install all required dependencies.
+
 ### Build for debug
     
 ```bash
@@ -69,6 +71,17 @@ cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
 cd build
 make test
 ```
+
+### Creating a new functionblock client
+
+Copy the closest existing functionblock client, and run [this script](./scripts/rename.sh), e.g.
+
+```bash
+scripts/rename.sh src/include/io4edge_analogintypea.h binaryIoTypeA analogInTypeA
+scripts/rename.sh src/analogintypea.c binaryIoTypeA analogInTypeA  
+```
+
+
 ## Copyright
 
 Copyright © 2023 Ci4Rail GmbH <engineering@ci4rail.com>

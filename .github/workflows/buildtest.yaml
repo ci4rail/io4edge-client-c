@@ -38,8 +38,11 @@ jobs:
             make cmake pkg-config libprotobuf-dev libprotoc-dev protobuf-compiler \
             ca-certificates
 
+          # Build protobuf-c
           git clone https://github.com/protobuf-c/protobuf-c.git && \
             cd protobuf-c && ./autogen.sh && ./configure && make && make install
+
+          # Build project
           cd /repo
           mkdir build && cd build
           cmake ..
@@ -52,10 +55,6 @@ jobs:
           gcc -o example main.c -lpthread -lrt -lio4edge -lprotobuf-c
           ls -l /tmp/example
           EOF
-
-          pwd
-          ls -l
-          ls -l `pwd`
 
           chmod +x /tmp/cmd.sh
           docker run --platform ${{ matrix.platform }} -v`pwd`:/repo -v/tmp:/cmd ${{ matrix.os }} /cmd/cmd.sh

@@ -9,7 +9,7 @@
 #include "io4edge_api/io4edge_functionblock.pb-c.h"
 
 /*
- * @brief Upload configuration to the binaryiotype a function block.
+ * @brief Upload configuration to the binaryiotypea function block.
  * @param client Client handle.
  * @param configuration Configuration to upload.
  * @return IO4E_OK on success, IO4E_xxx error code on failure.
@@ -20,7 +20,7 @@ io4e_err_t io4edge_binaryiotypea_upload_configuration(io4edge_functionblock_clie
     const BinaryIoTypeA__ConfigurationSet *configuration);
 
 /*
- * @brief Download configuration from the binaryiotype a function block.
+ * @brief Download configuration from the binaryiotypea function block.
  * @param client Client handle.
  * @param configuration_p[out] Pointer to the configuration struct that is filled with the configuration.
  * @return IO4E_OK on success, IO4E_xxx error code on failure.
@@ -31,7 +31,7 @@ io4e_err_t io4edge_binaryiotypea_download_configuration(io4edge_functionblock_cl
     BinaryIoTypeA__ConfigurationGetResponse **configuration_p);
 
 /*
- * @brief Describe the binaryiotype a function block.
+ * @brief Describe the binaryiotypea function block.
  * @param client Client handle.
  * @param description_p[out] Pointer to the description struct that is filled with the description.
  * @return IO4E_OK on success, IO4E_xxx error code on failure.
