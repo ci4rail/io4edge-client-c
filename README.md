@@ -20,6 +20,8 @@ Not planned: Support for io4edge management functions, such as firmware update. 
 
 * Service addressing via MDNS is currently not supported. Please use the IP address and port of the io4edge device.
 * Currently compiles on Linux only. CMakelists.txt needs to be adapted for other platforms.
+* Only a static library is built.
+* Tested under Ubuntu 22.04 and 20.04. 
 
 ## Build and Installation
 
