@@ -56,14 +56,37 @@ typedef void *(*io4edge_unpack_t)(ProtobufCAllocator *allocator, size_t len, con
  * @param host Hostname or IP address of the io4edge server.
  * @param port Port of the io4edge server.
  * @param cmd_timeout_seconds Sets the timeout for commands in seconds.
- * @return IO4E_OK on success, IO4E_FAIL on failure.
+ * @return IO4E_OK on success, IO4E_xxx error code on failure.
  */
-io4e_err_t io4edge_functionblock_client_new_from_host_port(io4edge_functionblock_client_t **handle_p,
-    const char *host,
-    int port,
-    int cmd_timeout_seconds);
+* / io4e_err_t io4edge_functionblock_client_new_from_host_port(io4edge_functionblock_client_t **handle_p,
+        const char *host,
+        int port,
+        int cmd_timeout_seconds);
+
+/*
+ * @brief Delete an io4edge functionblock client.
+ * @param handle_p[in,out] Pointer to the handle that is filled with NULL.
+ * @return IO4E_OK on success, IO4E_xxx error code on failure.
+ */
 io4e_err_t io4edge_functionblock_client_delete(io4edge_functionblock_client_t **handle_p);
+
+/*
+ * @brief Stop Functionblock Stream
+ * @param h[in] Functionblock client handle
+ * @return IO4E_OK on success, IO4E_xxx error code on failure.
+ */
 io4e_err_t io4edge_functionblock_stop_stream(io4edge_functionblock_client_t *h);
+
+/*
+ * @brief Read next bucket from stream
+ * @param h Functionblock client handle
+ * @param unpack Function pointer to unpack the functionblock specific stream data message
+ * @param sd_p[out] Pointer to the functionblock generic stream data message (filled with NULL if no data is available)
+ * @param fs_data_p[out] Pointer to the unpacked functionblock specific stream data message (filled with NULL if no data
+ * is available)
+ * @param timeout Timeout in seconds to wait for next bucket
+ * @return IO4E_OK on success, IO4E_xxx error code on failure.
+ */
 io4e_err_t io4edge_functionblock_read_stream(io4edge_functionblock_client_t *h,
     io4edge_unpack_t unpack,
     Functionblock__StreamData **sd_p,
