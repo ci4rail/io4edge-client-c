@@ -58,10 +58,10 @@ typedef void *(*io4edge_unpack_t)(ProtobufCAllocator *allocator, size_t len, con
  * @param cmd_timeout_seconds Sets the timeout for commands in seconds.
  * @return IO4E_OK on success, IO4E_xxx error code on failure.
  */
-* / io4e_err_t io4edge_functionblock_client_new_from_host_port(io4edge_functionblock_client_t **handle_p,
-        const char *host,
-        int port,
-        int cmd_timeout_seconds);
+io4e_err_t io4edge_functionblock_client_new_from_host_port(io4edge_functionblock_client_t **handle_p,
+    const char *host,
+    int port,
+    int cmd_timeout_seconds);
 
 /*
  * @brief Delete an io4edge functionblock client.
