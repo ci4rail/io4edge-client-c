@@ -27,7 +27,7 @@ Not planned: Support for io4edge management functions, such as firmware update. 
 
 Please build this library from source. The following dependencies are required:
 
-* [protobuf-c](https://github.com/protobuf-c/protobuf-c): Please install this library first. As an example, see the [github ci pipeline](.github/workflows/buildtest.yml) for Ubuntu.
+* [protobuf-c](https://github.com/protobuf-c/protobuf-c): Please install this library first. As an example, see the [github ci pipeline](.github/workflows/buildtest.yaml) for Ubuntu.
 
 
 ### Building 
@@ -48,17 +48,17 @@ sudo cmake --install .
 ```
 ### Usage
 
-See [examples in github repo](https://github.com/ci4rail/io4edge-client-c/examples) for usage examples.
+See [examples in github repo](./examples) for usage examples.
 
 ### Using the library outside of the project
 
 ```bash
-gcc -o example example.c -lpthread -lrt -lio4edge -lprotobuf-c
+gcc -o example example.c -lio4edge -lpthread -lrt -lprotobuf-c
 ```
 
 ## Development
 
-When using vscode, open this repo in a [devcontainer](./devcontainer). This will install all required dependencies.
+When using vscode, open this repo in a [devcontainer](./.devcontainer). This will install all required dependencies.
 
 ### Build for debug
     
