@@ -27,8 +27,21 @@ Not planned: Support for io4edge management functions, such as firmware update. 
 
 Please build this library from source. The following dependencies are required:
 
-* [protobuf-c](https://github.com/protobuf-c/protobuf-c): Please install this library first. As an example, see the [github ci pipeline](.github/workflows/buildtest.yaml) for Ubuntu.
+### protobuf-c
 
+Please install [protobuf-c](https://github.com/protobuf-c/protobuf-c) first. 
+
+For example, when using Ubuntu, you can install it like this:
+
+```bash
+sudo apt-get update 
+sudo apt-get -y install --no-install-recommends gcc g++ git automake libtool make cmake pkg-config libprotobuf-dev libprotoc-dev protobuf-compiler ca-certificates
+
+git clone https://github.com/protobuf-c/protobuf-c.git 
+cd protobuf-c && ./autogen.sh && ./configure && make 
+sudo make install 
+sudo ldconfig
+```
 
 ### Building 
 
@@ -55,6 +68,13 @@ See [examples in github repo](./examples) for usage examples.
 ```bash
 gcc -o example example.c -lio4edge -lpthread -lrt -lprotobuf-c
 ```
+
+or build a static linked binary, that has no dependencies to runtime libraries:
+
+```bash
+gcc -o example example.c -static -lio4edge -lpthread -lrt -lprotobuf-c
+```
+Even though the library is statically linked, you might run into problems with host name resolution, for example if you run the binary on a target whose glibc version does not match the host used to compile the binary. Use IP addresses instead of host names then.
 
 ## Development
 
