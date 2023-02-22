@@ -1,0 +1,25 @@
+---
+BasedOnStyle: Google
+BinPackArguments: false
+BinPackParameters: false
+BreakBeforeBraces: Linux
+AlignAfterOpenBracket: DontAlign
+AlignConsecutiveAssignments: "false"
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortBlocksOnASingleLine: "false"
+AllowShortCaseLabelsOnASingleLine: "false"
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: "false"
+AllowShortLoopsOnASingleLine: "false"
+ColumnLimit: "120"
+ConstructorInitializerAllOnOneLineOrOnePerLine: "true"
+ConstructorInitializerIndentWidth: "4"
+IndentCaseLabels: "false"
+IndentWidth: "4"
+Language: Cpp
+NamespaceIndentation: None
+SpaceInEmptyParentheses: "false"
+Standard: Auto
+TabWidth: "4"
+UseTab: Never
+SortIncludes: "false"
