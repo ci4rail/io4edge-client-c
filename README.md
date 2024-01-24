@@ -106,6 +106,6 @@ scripts/rename.sh src/analogintypea.c binaryIoTypeA analogInTypeA
 
 ## Copyright
 
-Copyright © 2023 Ci4Rail GmbH <engineering@ci4rail.com>
+Copyright © 2023-2024 Ci4Rail GmbH <engineering@ci4rail.com>
 
 io4edge-client-c is released under Apache 2.0 License, see [LICENSE](LICENSE) for details.
