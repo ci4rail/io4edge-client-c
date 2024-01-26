@@ -6,10 +6,10 @@ C/C++ client sdk for io4edge.
 This library provides support for the following function blocks within io4edge devices:
 * Analog In TypeA - IOU01, MIO01
 * Binary IO TypeA - IOU01, MIO01
+* MVB Sniffer - IOU03, MIO03
+* CAN Layer2 - IOU03, MIO03, IOU04, MIO04, IOU06
 
 Currently not supported, but will follow:
-* CAN Layer2 - IOU03, MIO03, IOU04, MIO04, IOU06
-* MVB Sniffer - IOU03, MIO03
 * Binary IO TypeC - IOU07
 * Binary IO TypeB - IOU06
 * Motion Sensor - CPU01UC
@@ -86,6 +86,7 @@ When using vscode, open this repo in a [devcontainer](./.devcontainer). This wil
 mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
+cmake --build .
 ```
 ### Running tests
 
@@ -106,6 +107,6 @@ scripts/rename.sh src/analogintypea.c binaryIoTypeA analogInTypeA
 
 ## Copyright
 
-Copyright © 2023 Ci4Rail GmbH <engineering@ci4rail.com>
+Copyright © 2023-2024 Ci4Rail GmbH <engineering@ci4rail.com>
 
 io4edge-client-c is released under Apache 2.0 License, see [LICENSE](LICENSE) for details.
