@@ -7,9 +7,9 @@ This library provides support for the following function blocks within io4edge d
 * Analog In TypeA - IOU01, MIO01
 * Binary IO TypeA - IOU01, MIO01
 * MVB Sniffer - IOU03, MIO03
+* CAN Layer2 - IOU03, MIO03, IOU04, MIO04, IOU06
 
 Currently not supported, but will follow:
-* CAN Layer2 - IOU03, MIO03, IOU04, MIO04, IOU06
 * Binary IO TypeC - IOU07
 * Binary IO TypeB - IOU06
 * Motion Sensor - CPU01UC
