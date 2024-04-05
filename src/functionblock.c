@@ -57,8 +57,8 @@ io4e_err_t io4edge_functionblock_client_delete(io4edge_functionblock_client_t **
         io4edge_functionblock_client_t *h = *handle_p;
 
         // stop the read thread
-        pthread_cancel(h->read_thread_id);
-        pthread_join(h->read_thread_id, NULL);
+        IO4E_LOGI(TAG, "pthread_cancel:%d", pthread_cancel(h->read_thread_id));
+        IO4E_LOGI(TAG, "pthread_join:%d", pthread_join(h->read_thread_id, NULL));
         io4e_streamq_delete(&h->streamq);
 
         h->transport->destroy(&h->transport);
@@ -477,6 +477,7 @@ static void *read_thread(void *arg)
             if (err == IO4E_ERR_TIMEOUT)
                 continue;
             IO4E_LOGE(TAG, "command read failed: %d", err);
+            exit(1);
             continue;
         }
         if (res_len == 0) {
@@ -500,7 +501,6 @@ static void *read_thread(void *arg)
 
             if ((err = io4e_streamq_push(h->streamq, sd, IO4E_FOREVER)) != IO4E_OK) {
                 IO4E_LOGE(TAG, "streamq push failed: %d", err);
-                functionblock__response__free_unpacked(res, NULL);
                 continue;
             }
         } else {
