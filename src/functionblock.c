@@ -57,8 +57,8 @@ io4e_err_t io4edge_functionblock_client_delete(io4edge_functionblock_client_t **
         io4edge_functionblock_client_t *h = *handle_p;
 
         // stop the read thread
-        IO4E_LOGI(TAG, "pthread_cancel:%d", pthread_cancel(h->read_thread_id));
-        IO4E_LOGI(TAG, "pthread_join:%d", pthread_join(h->read_thread_id, NULL));
+        pthread_cancel(h->read_thread_id);
+        pthread_join(h->read_thread_id, NULL);
         io4e_streamq_delete(&h->streamq);
 
         h->transport->destroy(&h->transport);
