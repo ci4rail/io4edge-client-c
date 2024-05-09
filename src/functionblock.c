@@ -477,7 +477,6 @@ static void *read_thread(void *arg)
             if (err == IO4E_ERR_TIMEOUT)
                 continue;
             IO4E_LOGE(TAG, "command read failed: %d", err);
-            exit(1);
             continue;
         }
         if (res_len == 0) {
