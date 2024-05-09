@@ -500,7 +500,6 @@ static void *read_thread(void *arg)
 
             if ((err = io4e_streamq_push(h->streamq, sd, IO4E_FOREVER)) != IO4E_OK) {
                 IO4E_LOGE(TAG, "streamq push failed: %d", err);
-                functionblock__response__free_unpacked(res, NULL);
                 continue;
             }
         } else {
