@@ -10,6 +10,7 @@
 #include "io4edge_client.h"
 #include <io4edge_binaryiotypea.h>
 #include <pthread.h>
+#include <inttypes.h>
 
 // change this to your device's IP address
 #define DEVICE_IP "192.168.24.154"
@@ -120,7 +121,7 @@ int main(void)
             printf("Failed to read stream: %d\n", err);
             return 1;
         }
-        printf("Received stream data ts=%ld, seq=%d\n", stream_data->deliverytimestampus, stream_data->sequence);
+        printf("Received stream data ts=%" PRIu64 ", seq=%d\n", stream_data->deliverytimestampus, stream_data->sequence);
         for (int i = 0; i < fs_stream_data->n_samples; i++) {
             BinaryIoTypeA__Sample *sample = fs_stream_data->samples[i];
             printf(" Channel %d -> %d\n", sample->channel, sample->value);
