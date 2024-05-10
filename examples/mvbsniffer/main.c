@@ -13,7 +13,7 @@
 #include <inttypes.h>
 
 // change this to your device's IP address
-#define DEVICE_IP "192.168.24.102"
+#define DEVICE_IP "192.168.24.173"
 #define DEVICE_PORT 10000
 
 //  This is a test pattern that generates the following telegrams.
@@ -108,7 +108,6 @@ int main(void)
         }
         mvb_sniffer__telegram_collection__free_unpacked(fs_stream_data, NULL);
         functionblock__stream_data__free_unpacked(stream_data, NULL);
-        sleep(1);
     }
     io4edge_functionblock_client_delete(&client);
 
