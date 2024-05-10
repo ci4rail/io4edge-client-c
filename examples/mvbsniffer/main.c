@@ -10,6 +10,7 @@
 #include "io4edge_client.h"
 #include <io4edge_mvbsniffer.h>
 #include <pthread.h>
+#include <inttypes.h>
 
 // change this to your device's IP address
 #define DEVICE_IP "192.168.24.102"
@@ -107,6 +108,7 @@ int main(void)
         }
         mvb_sniffer__telegram_collection__free_unpacked(fs_stream_data, NULL);
         functionblock__stream_data__free_unpacked(stream_data, NULL);
+        sleep(1);
     }
     io4edge_functionblock_client_delete(&client);
 
@@ -119,7 +121,7 @@ static char *telegram_to_string(char *buf, size_t buf_len, MvbSniffer__Telegram 
     int len;
     len = snprintf(buf,
         buf_len,
-        "Telegram: ts=%ld addr=%03x, %s,",
+        "Telegram: ts=%" PRIu64 " addr=%03x, %s,",
         telegram->timestamp,
         telegram->address,
         telegram->type < mvb_sniffer__telegram__type__descriptor.n_values
