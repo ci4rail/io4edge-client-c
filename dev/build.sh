@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# 
+# May be used to build the project in a docker container
 #
 apt-get update && export DEBIAN_FRONTEND=noninteractive \
   && apt-get -y install --no-install-recommends gcc g++ git automake libtool \
