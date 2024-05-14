@@ -50,13 +50,25 @@ static inline size_t advance_idx(streamq_t *q, size_t idx)
     return (idx + 1) % q->capacity;
 }
 
-// Push a message into the queue. Blocks if the queue is full.
-// @param msg: message to push
-io4e_err_t io4e_streamq_push(streamq_t *q, void *msg, long timeout)
+static struct timespec get_timeout(uint64_t timeout)
 {
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
-    ts.tv_sec += timeout;
+    uint64_t until = ts.tv_sec + timeout;
+
+    // ensure end of the timeout doesn't exceed the maximum time value on 32 bit systems
+    if(sizeof(time_t)==4 && until > 0x7FFFFFFF){
+        until = 0x7FFFFFFF;
+    }
+    ts.tv_sec = until;
+    return ts;
+}
+
+// Push a message into the queue. Blocks if the queue is full.
+// @param msg: message to push
+io4e_err_t io4e_streamq_push(streamq_t *q, void *msg, uint64_t timeout)
+{
+    struct timespec ts = get_timeout(timeout);
     if (sem_timedwait(&q->write_sem, &ts) == -1) {
         IO4E_LOGD(TAG, "push timed out");
         return IO4E_ERR_TIMEOUT;
@@ -74,11 +86,10 @@ io4e_err_t io4e_streamq_push(streamq_t *q, void *msg, long timeout)
 // @param msg_p: pointer to store the message
 // @param timeout: timeout in seconds
 // @return IO4E_OK on success, IO4E_ERR_TIMEOUT on timeout
-io4e_err_t io4e_streamq_pop(streamq_t *q, void **msg_p, long timeout)
+io4e_err_t io4e_streamq_pop(streamq_t *q, void **msg_p, uint64_t timeout)
 {
-    struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
-    ts.tv_sec += timeout;
+    struct timespec ts = get_timeout(timeout);
+
     if (sem_timedwait(&q->read_sem, &ts) == -1) {
         IO4E_LOGD(TAG, "pop timed out");
         return IO4E_ERR_TIMEOUT;

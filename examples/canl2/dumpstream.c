@@ -11,6 +11,7 @@
 #include <io4edge_canl2.h>
 #include <pthread.h>
 #include "can_example.h"
+#include <inttypes.h>
 
 #define ACCEPTANCE_MASK 0x000
 #define ACCEPTANCE_CODE 0x000
@@ -74,7 +75,7 @@ static char *sample_to_string(char *buf, size_t buf_len, CanL2__Sample *sample)
     size_t buf_left = buf_len;
     int ret;
 
-    ret = snprintf(p, buf_left, "%10ld us: ", sample->timestamp);
+    ret = snprintf(p, buf_left, "%10" PRIu64 " us: ", sample->timestamp);
     p += ret;
     buf_left -= ret;
 

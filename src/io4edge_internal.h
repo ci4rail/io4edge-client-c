@@ -15,6 +15,7 @@ typedef struct io4edge_functionblock_client_t io4edge_functionblock_client_t;
 #include <string.h>
 #include <semaphore.h>
 #include <pthread.h>
+#include <inttypes.h>
 #include "logging.h"
 
 #define CONFIG_STREAMQ_CAPACITY 100
@@ -108,6 +109,6 @@ io4e_err_t io4e_functionblock_start_stream(io4edge_functionblock_client_t *h,
 
 io4e_err_t io4e_streamq_new(size_t nentries, streamq_t **q_p);
 void io4e_streamq_delete(streamq_t **q_p);
-io4e_err_t io4e_streamq_push(streamq_t *q, void *msg, long timeout);
-io4e_err_t io4e_streamq_pop(streamq_t *q, void **msg_p, long timeout);
+io4e_err_t io4e_streamq_push(streamq_t *q, void *msg, uint64_t timeout);
+io4e_err_t io4e_streamq_pop(streamq_t *q, void **msg_p, uint64_t timeout);
 size_t io4e_streamq_entries(streamq_t *q);
